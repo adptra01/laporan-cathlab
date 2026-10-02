@@ -242,8 +242,10 @@
   function bindValidation(el, s) {
     if (!el || el.__tourBound === s.field.k) return;
     el.__tourBound = s.field.k;
-    var isComplex = !!(el.matches && (el.matches('tr,table,.box,.vrow,#chsAkses,.chips') ||
-      el.closest('table') || el.closest('#chsAkses')));
+    // field kompleks (diagram/tabel/chips) ditentukan dari tipe di schema, bukan dari DOM,
+    // supaya tidak salah bila atribut belum dirender
+    var isComplex = ['diagram', 'table', 'chips', 'choice'].indexOf(s.field.type) >= 0 ||
+      !!(el.matches && (el.matches('tr,table,.vrow,#chsAkses') || el.closest('table') || el.closest('#chsAkses')));
     function paint() {
       var box = frameCtx.doc.getElementById('tourValid');
       if (!box) return;
