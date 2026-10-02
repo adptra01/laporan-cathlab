@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Laporan Tindakan Cathlab — Lengkap</title>
+<style>
+:root{--ac:#0f766e;--ink:#14212b;--mu:#5d6b78;--ln:#d6dde3;--bg:#eef2f4}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.45 "Segoe UI",system-ui,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--ln);padding:8px 16px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center}
+button{font:inherit;font-size:13px;padding:7px 13px;border:1px solid var(--ln);border-radius:6px;background:#fff;cursor:pointer}
+.b1{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600}
+main{max-width:1000px;margin:14px auto;padding:0 12px}
+.card{background:#fff;border:1px solid var(--ln);border-radius:8px;padding:14px 16px;margin-bottom:12px}
+h2{margin:0 0 10px;font-size:15px;color:var(--ac)}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.w2{grid-column:span 2}.wf{grid-column:1/-1}
+label{display:block;font-size:12px;color:var(--mu);margin-bottom:3px}
+input,select,textarea{width:100%;padding:7px 9px;border:1px solid #bcc7d0;border-radius:6px;font:inherit;background:#fff}
+textarea{min-height:150px;resize:vertical}
+.miss input,.miss select,.miss textarea{border-color:#dc2626;background:#fef2f2}
+.chs{display:flex;gap:6px;flex-wrap:wrap}
+.ch.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.dgw{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dgw.single{grid-template-columns:1fr;max-width:520px;margin:0 auto}
+@media(max-width:800px){.dgw{grid-template-columns:1fr}.w2{grid-column:auto}}
+.box{border:1px solid var(--ln);border-radius:8px;padding:8px;background:#fafcfc}
+.box h3{margin:0 0 6px;font-size:13px;text-align:center;color:var(--ac)}
+svg{width:100%;height:auto;display:block}
+.seg{fill:none;stroke:#a3b0bb;stroke-width:5;stroke-linecap:round;cursor:pointer}
+.seg:hover{stroke-width:9}
+.seg.normal{stroke:#16a34a}.seg.stenosis{stroke:#dc2626;stroke-dasharray:6 4}
+.seg.stent{stroke:#2563eb;stroke-width:8}.seg.thrombus{stroke:#ea580c;stroke-dasharray:2 3}
+.seg.cto{stroke:#7f1d1d;stroke-dasharray:1 6}
+.lb{font-size:10px;fill:#455;font-weight:600;pointer-events:none}
+.hd{font-size:12px;fill:var(--ac);font-weight:700}
+.lg{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;font-size:11px;color:var(--mu);margin-top:6px}
+.lg i{display:inline-block;width:14px;height:4px;margin-right:3px;vertical-align:middle;border-radius:2px}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+#st th{font-size:11px;text-align:left;color:var(--mu);padding:2px 4px}
+#st td{padding:2px}
+#st input,#st select{padding:5px 6px;font-size:12px;min-width:56px}
+.md{display:none;position:fixed;inset:0;background:#0007;z-index:50;align-items:center;justify-content:center}
+.md.show{display:flex}
+.mc{background:#fff;border-radius:8px;padding:16px;width:340px;max-width:92vw}
+.mc h3{margin:0 0 10px}
+.so{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.so button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#14212b;color:#fff;padding:10px 16px;border-radius:8px;z-index:99;display:none}
+#print{display:none}
+body.pv main,body.pv header{display:none}
+body.pv #print{display:block;width:210mm;margin:40px auto;background:#fff;box-shadow:0 2px 12px #0004}
+.pvbar{display:none;position:fixed;top:0;left:0;right:0;gap:8px;padding:8px 16px;background:#fff;z-index:60;border-bottom:1px solid var(--ln)}
+body.pv .pvbar{display:flex}
+#print{font:11px/1.4 Arial,sans-serif;color:#000}
+.pg{padding:12mm 14mm;min-height:297mm}
+.kop{display:flex;gap:12px;align-items:center;border-bottom:3px double #000;padding-bottom:6px;margin-bottom:10px}
+.logo{width:62px;height:62px;border:1px dashed #999;font-size:9px;color:#999;display:flex;align-items:center;justify-content:center}
+.kop .t{flex:1;font-weight:bold;font-size:14px;line-height:1.25}
+.tr{display:flex;justify-content:space-between;gap:14px;margin-bottom:10px}
+.pt{width:330px;border:1px solid #000}
+.pt td{padding:1px 6px;vertical-align:top}
+.pt td:first-child{font-weight:bold;width:92px}
+.dt{border-top:1px solid #000;border-bottom:1px solid #000}
+.dt td{border-bottom:1px solid #ccc;padding:3px 5px;vertical-align:top}
+.dt td:nth-child(odd){font-weight:bold;white-space:nowrap}
+#print h4{margin:12px 0 5px;font-size:11.5px;text-transform:uppercase;border-bottom:1px solid #000}
+.nr{white-space:pre-wrap;border:1px solid #bbb;padding:6px 8px;line-height:1.5}
+.lt,.lt td,.lt th{border:1px solid #666;padding:2px 5px;text-align:left;font-size:10px}
+.lt th{background:#eee}
+.ft{display:flex;justify-content:space-between;margin-top:18px}
+.ft ol{margin:3px 0;padding-left:16px}
+.ttd{text-align:center;min-width:220px}
+.ttd img{height:60px;display:block;margin:2px auto}
+.ttd .sp{height:60px}
+.dp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.dp.single{grid-template-columns:1fr;max-width:420px;margin:0 auto}
+.dp svg{max-height:250px}
+.dp b{display:block;text-align:center;margin-bottom:4px}
+@media print{
+  body{background:#fff}
+  header,main,.pvbar{display:none!important}
+  #print{display:block!important}
+  @page{size:A4;margin:0}
+  .pg{page-break-after:always}
+  .pg:last-child{page-break-after:auto}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div><b>Laporan Tindakan Cathlab</b> <span id="bn" style="color:var(--mu);font-size:13px"></span></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button data-a="demo">Muat contoh</button>
+    <button data-a="reset">Reset</button>
+    <button data-a="prev">Pratinjau</button>
+    <button class="b1" data-a="print">Cetak</button>
+  </div>
+</header>
+
+<main id="main"></main>
+
+<div class="md" id="md"><div class="mc">
+  <h3 id="mt"></h3>
+  <label>Status segmen</label>
+  <div class="so" id="so"></div>
+  <div style="margin-bottom:8px"><label>Derajat stenosis (%)</label><input id="mp" placeholder="mis. 95-99"></div>
+  <div style="margin-bottom:12px"><label>Catatan</label><input id="mn" placeholder="mis. thrombus gr IV"></div>
+  <div style="display:flex;gap:8px;justify-content:flex-end">
+    <button id="mx">Batal</button>
+    <button id="mh">Hapus</button>
+    <button class="b1" id="ma">Terapkan</button>
+  </div>
+</div></div>
+
+<div id="toast"></div>
+<div class="pvbar"><button data-a="back">← Kembali</button><button class="b1" onclick="window.print()">Cetak</button></div>
+<div id="print"></div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const SEG=[["LM","M 180 60 Q 175 85 170 105",185,70],["LAD prox","M 170 105 Q 150 140 130 180",115,150],["LAD mid","M 130 180 Q 115 220 110 260",80,230],["LAD distal","M 110 260 Q 105 290 115 315",75,300],["D1","M 140 160 Q 175 175 200 200",185,190],["D2","M 125 210 Q 155 230 175 255",160,240],["LCX prox","M 170 105 Q 220 115 250 140",215,125],["LCX mid","M 250 140 Q 280 165 295 200",275,180],["LCX distal","M 295 200 Q 305 230 300 260",295,250],["OM1","M 250 145 Q 255 190 245 230",235,185],["OM2","M 285 185 Q 285 220 280 250",288,225],["RCA prox","M 400 90 Q 420 130 425 175",422,130],["RCA mid","M 425 175 Q 425 220 415 260",422,220],["RCA distal","M 415 260 Q 400 300 380 320",388,305],["PDA","M 415 260 Q 370 265 340 275",365,258],["PLV","M 400 295 Q 370 300 350 305",355,322]];
+const L={normal:'Normal',stenosis:'Stenosis',stent:'Stent',thrombus:'Trombus',cto:'Oklusi total'};
+const AKS=['Radialis kanan','Radialis kiri','Brachialis','Femoral kanan','Femoral kiri'];
+const BLN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+const JENIS={
+  'CAG'        : {phase:'single', label:'CAG'},
+  'PCI / PPCI' : {phase:'dual',   labelPre:'PRE PCI', labelPost:'POST PCI'},
+  'Angiografi' : {phase:'single', label:'ANGIOGRAFI'},
+  'FFR'        : {phase:'single', label:'FFR'},
+  'IVUS / OCT' : {phase:'single', label:'IVUS / OCT'},
+  'Rotablator' : {phase:'dual',   labelPre:'PRE ROTABLATOR', labelPost:'POST ROTABLATOR'},
+  'Lain-lain'  : {phase:'dual',   labelPre:'', labelPost:''}
+};
+
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const tgID=i=>{if(!i)return'-';const[y,m,d]=i.split('-');return `${+d} ${BLN[m-1]} ${y}`};
+const blank=()=>({
+  f:{tgl:today(),ttd_tgl:today(),jenis:'PCI / PPCI',labelPre:'PRE PCI',labelPost:'POST PCI',
+     akses:'Radialis kanan',komplikasi:'Tidak ada',dom:'Right',pa:'Tidak'},
+  seg:{A:{},B:{}},
+  stents:[]
+});
+let S; try{S=JSON.parse(localStorage.getItem('cl2:lengkap'))}catch(e){} S=S||blank();
+
+const F=(k,l,t='text',x='',c='')=>`<div class="fd ${c}" data-w="${k}"><label>${l}</label><input data-k="${k}" type="${t}" ${x}></div>`;
+const SE=(k,l,o,c='')=>`<div class="fd ${c}" data-w="${k}"><label>${l}</label><select data-k="${k}">${o.map(v=>`<option>${v}</option>`).join('')}</select></div>`;
+const SC=(id,t,b)=>`<section class="card" id="${id}"><h2>${t}</h2>${b}</section>`;
+
+$('#main').innerHTML=
+SC('s1','1. Pasien & Tindakan',`<div class="g">
+  ${F('rm','No. RM *')}${F('nama','Nama *')}${F('reg','No. Registrasi')}${F('lahir','Tgl lahir','date')}
+  ${SE('jk','Jenis kelamin',['','Laki-laki','Perempuan'])}
+  ${F('umur','Umur')}${F('dpjp','DPJP','text','','w2')}
+  ${F('ruang','Ruang / Cathlab')}${F('masuk','Tgl masuk','date')}
+  ${F('tgl','Tanggal tindakan *','date')}${F('mulai','Jam mulai','time')}${F('selesai','Jam selesai','time')}
+  ${F('anestesi','Lama anestesi')}
+  <div class="fd wf" data-w="jenis"><label>Jenis pemeriksaan * (menentukan judul diagram)</label>
+    <select data-k="jenis">${Object.keys(JENIS).map(k=>`<option>${k}</option>`).join('')}</select></div>
+  <div class="fd wf" id="wPre" style="display:none"><label>Judul diagram 1 (bisa diubah — mendukung freetext)</label><input data-k="labelPre" placeholder="mis. PRE PCI, ANGIOGRAFI, PRE ROTABLATOR"></div>
+  <div class="fd wf" id="wPost" style="display:none"><label>Judul diagram 2 (bisa diubah — mendukung freetext)</label><input data-k="labelPost" placeholder="mis. POST PCI, POST ROTABLATOR"></div>
+  ${F('pre','Diagnosis pre tindakan *','text','','w2')}${F('post','Diagnosis post tindakan','text','','w2')}
+</div>`)+
+
+SC('s2','2. Tim, Akses & Vital',`<div class="g">
+  ${F('op','Dokter operator *')}${F('asisten','Asisten / scrub')}${F('perawat','Perawat sirkuler')}${F('kolim','Kolimator')}
+  <div class="fd wf" data-w="akses"><label>Tempat masuk *</label><div class="chs" id="chsAkses"></div></div>
+  ${F('sheath','Sheath (F)','number')}${F('kat_diag','Kateter diagnostik')}${F('kat_guide','Guiding')}
+  ${F('hep','Heparin IA (IU)','number')}${F('ntg','NTG IA (mcg)','number')}
+  ${F('kontras','Jenis kontras')}${F('kontras_vol','Volume kontras (cc)','number')}${F('radiasi','Total radiasi (mGy)','number')}${F('darah','Total perdarahan (cc)','number')}
+  ${F('td','TD (mmHg)')}${F('hr','HR (bpm)')}${F('rr','RR (x/mnt)')}${F('suhu','Suhu (°C)')}${F('urine','Urine (cc)')}
+</div>`)+
+
+SC('s3','3. Diagram Koroner — klik segmen untuk menandai',`<div class="dgw" id="dg"></div>`)+
+
+SC('s4','4. Stent / Perangkat',`<div class="tw"><table id="st">
+  <thead><tr><th>Segmen</th><th>Tipe</th><th>Merek</th><th>Dia (mm)</th><th>Panjang</th><th>Tekanan atm</th><th>Post atm</th><th></th></tr></thead>
+  <tbody id="sb"></tbody></table></div>
+  <div style="margin-top:10px"><button data-a="addst">+ Tambah stent</button></div>`)+
+
+SC('s5','5. Narasi & Kesimpulan',`<div class="g">
+  <div class="fd wf" data-w="kesimpulan"><label>Kesimpulan *</label>
+    <div style="display:flex;gap:6px"><input data-k="kesimpulan"><button data-a="kes" style="white-space:nowrap">Auto</button></div>
+  </div>
+  <div class="fd wf"><label>Narasi tindakan</label><textarea data-k="narasi" id="nar"></textarea>
+    <div style="margin-top:6px"><button data-a="gen">Susun ulang narasi otomatis</button>
+    <span style="font-size:12px;color:var(--mu);margin-left:6px" id="mn2"></span></div>
+  </div>
+</div>`)+
+
+SC('s6','6. Tanda Tangan',`<div class="g">
+  ${F('ttd_tgl','Tanggal TTD','date')}${F('ttd_nama','DPJP jantung','text','','w2')}
+  <div class="fd"><label>Gambar tanda tangan (opsional)</label><input type="file" accept="image/*" id="ttdf"></div>
+</div>`);
+
+$('#chsAkses').innerHTML=AKS.map(a=>`<button type="button" class="ch" data-g="akses" data-v="${a}">${a}</button>`).join('');
+
+const jInfo=()=>JENIS[S.f.jenis]||JENIS['Lain-lain'];
+const isDual=()=>jInfo().phase==='dual';
+const label=(ph)=>{
+  if(isDual()){
+    const v=ph==='A'?S.f.labelPre:S.f.labelPost;
+    return v && v.trim() ? v : (ph==='A'?'PRE':'POST');
+  }
+  return jInfo().label || 'DIAGRAM';
+};
+
+function grp(n){return n==='LM'?'LM':/^(LAD|D\d)/.test(n)?'LAD':/^(LCX|OM)/.test(n)?'LCX':'RCA'}
+function desc(ph,a){const r=SEG.filter(([n])=>grp(n)===a).map(([n])=>[n,S.seg[ph][n]]).filter(([n,s])=>s&&s.s&&s.s!=='normal')
+  .map(([n,s])=>`${L[s.s]}${s.p?' '+s.p+'%':''} ${n===a?'':n.replace(a,'').trim()}${s.n?' ('+s.n+')':''}`.replace(/\s+/g,' ').trim());
+  return r.length?r.join('; '):'Normal'}
+function gen(){
+  const f=S.f, ak=(f.akses||'-').toLowerCase(), R=[];
+  R.push(`Tindakan antiseptik di daerah ${ak}`);
+  R.push(`Dilakukan anestesi sekitar arteri ${ak}, puncture lancar, sheath ${f.sheath||'-'}F dimasukkan, heparin ${f.hep||'-'} IU dan NTG ${f.ntg||'-'} mcg dimasukkan IA.`);
+  R.push(`Hasil angiografi distribusi ${f.dom||'Right'} Dominant:\n`+['LM','LAD','LCX','RCA'].map(a=>`${a} : ${desc('A',a)}`).join('\n'));
+  if(S.stents.length) R.push(`PCI: `+S.stents.map(s=>`${s.direct?'Direct stenting':'Pemasangan stent'} ${s.tipe} ${s.merek} ${s.dia}x${s.pan} mm di ${s.seg}${s.tek?' tekanan '+s.tek+' atm':''}${s.pd?', post dilatasi '+s.pd+' atm':''}.`).join(' '));
+  R.push(`Tindakan selesai, hemodinamik stabil. TD ${f.td||'-'} mmHg, HR ${f.hr||'-'} Bpm, Urine ${f.urine||'-'} cc`);
+  R.push(`Komplikasi tindakan: ${f.komplikasi||'-'}`);
+  R.push(`Media kontras: ${f.kontras||'-'} ${f.kontras_vol||'-'} cc · Radiasi: ${f.radiasi||'-'} mGy · Perdarahan: ${f.darah||'-'} cc`);
+  return R.map((t,i)=>`${i+1}. ${t}`).join('\n');
+}
+function kes(){
+  const v=new Set();
+  SEG.forEach(([n])=>{const s=S.seg.A[n];if(s&&(['cto','thrombus','stent'].includes(s.s)||(s.s==='stenosis'&&(parseInt(s.p)||100)>=50)))v.add(grp(n))});
+  const nv=[...v].filter(x=>x!=='LM').length;
+  let t=(nv||v.has('LM'))?`CAD ${nv}VD${v.has('LM')?' + LM':''}`:'Tidak ada stenosis signifikan';
+  if(S.stents.length) t+=`, post ${S.stents.length} ${S.stents[0].tipe} di ${S.stents.map(s=>s.seg).join(', ')}`;
+  return t;
+}
+function upd(silent){
+  $('#bn').textContent=S.f.nama?`${S.f.nama} · RM ${S.f.rm||'-'} · ${S.f.jenis}`:'';
+  if(!S.man){S.f.narasi=gen();$('#nar').value=S.f.narasi}
+  $('#mn2').textContent=S.man?'(narasi diedit manual)':'';
+  const j=jInfo();
+  $('#wPre').style.display=j.phase==='dual'?'':'none';
+  $('#wPost').style.display=j.phase==='dual'?'':'none';
+  if(!silent)save();
+}
+function save(){try{localStorage.setItem('cl2:lengkap',JSON.stringify(S))}catch(e){}}
+
+const LG='<div class="lg"><span><i style="background:#16a34a"></i>Normal</span><span><i style="background:#dc2626"></i>Stenosis</span><span><i style="background:#2563eb"></i>Stent</span><span><i style="background:#ea580c"></i>Trombus</span><span><i style="background:#7f1d1d"></i>Oklusi</span></div>';
+const svgHTML=(ph)=>`<svg viewBox="0 0 500 350" data-ph="${ph}">`+
+  SEG.map(([n,d,x,y])=>`<path class="seg ${(S.seg[ph][n]||{}).s||''}" data-s="${n}" d="${d}"/><text class="lb" x="${x}" y="${y}">${n}</text>`).join('')+
+  '<text class="hd" x="150" y="30">SISTEM KIRI</text><text class="hd" x="400" y="30">SISTEM KANAN</text></svg>';
+
+function rdg(){
+  const dual=isDual(), wrap=$('#dg');
+  wrap.className='dgw'+(dual?'':' single');
+  if(dual){
+    wrap.innerHTML=`
+      <div class="box"><h3>${esc(label('A'))}</h3>${svgHTML('A')}${LG}</div>
+      <div class="box"><h3>${esc(label('B'))}</h3>${svgHTML('B')}${LG}</div>`;
+  }else{
+    wrap.innerHTML=`<div class="box"><h3>${esc(label('A'))}</h3>${svgHTML('A')}${LG}</div>`;
+  }
+}
+
+function rst(){
+  $('#sb').innerHTML=S.stents.map((s,i)=>`<tr>
+    <td><select data-i="${i}" data-c="seg">${SEG.map(([n])=>`<option${n===s.seg?' selected':''}>${n}</option>`).join('')}</select></td>
+    <td><select data-i="${i}" data-c="tipe">${['DES','BMS','DCB'].map(x=>`<option${x===s.tipe?' selected':''}>${x}</option>`).join('')}</select></td>
+    ${['merek','dia','pan','tek','pd'].map(c=>`<td><input data-i="${i}" data-c="${c}" value="${esc(s[c]||'')}"></td>`).join('')}
+    <td><button data-del="${i}">✕</button></td></tr>`).join('');
+}
+function markStent(i){
+  const s=S.stents[i];
+  S.seg.B[s.seg]={s:'stent',p:'',n:[s.merek,s.dia&&s.pan?s.dia+'x'+s.pan:''].join(' ').trim()};
+}
+
+let cur=null;
+$('#so').innerHTML=Object.entries(L).map(([k,v])=>`<button type="button" data-v="${k}">${v}</button>`).join('');
+$('#so').onclick=e=>{const b=e.target.closest('button');if(!b)return;$$('#so button').forEach(x=>x.classList.toggle('on',x===b))};
+function openModal(ph,n){
+  const s=S.seg[ph][n]||{};
+  cur={ph,n};
+  $('#mt').textContent=`${n} — ${label(ph)}`;
+  $('#mp').value=s.p||'';$('#mn').value=s.n||'';
+  $$('#so button').forEach(b=>b.classList.toggle('on',b.dataset.v===s.s));
+  $('#md').classList.add('show');
+}
+function closeModal(){$('#md').classList.remove('show');cur=null}
+$('#mx').onclick=closeModal;
+$('#md').onclick=e=>{if(e.target.id==='md')closeModal()};
+$('#mh').onclick=()=>{if(cur){delete S.seg[cur.ph][cur.n];closeModal();rdg();upd()}};
+$('#ma').onclick=()=>{
+  const b=$('#so button.on');if(!b){alert('Pilih status segmen dulu.');return}
+  S.seg[cur.ph][cur.n]={s:b.dataset.v,p:b.dataset.v==='stenosis'?$('#mp').value:'',n:$('#mn').value};
+  closeModal();rdg();upd();
+};
+
+document.addEventListener('input',e=>{
+  const t=e.target,i=t.dataset.i;
+  if(i!==undefined){
+    const c=t.dataset.c,s=S.stents[i];
+    if(c==='seg'&&S.seg.B[s.seg]&&S.seg.B[s.seg].s==='stent')delete S.seg.B[s.seg];
+    s[c]=t.value;markStent(i);rdg();upd();return;
+  }
+  if(t.dataset.k){
+    S.f[t.dataset.k]=t.value;
+    if(t.dataset.k==='narasi')S.man=true;
+    if(t.dataset.k==='jenis'){
+      const j=JENIS[t.value];
+      if(j.phase==='dual' && j.labelPre){S.f.labelPre=j.labelPre;S.f.labelPost=j.labelPost}
+    }
+    t.closest('.fd')?.classList.remove('miss');
+    $$('[data-k]').forEach(el=>{if(el.dataset.k!==t.dataset.k&&S.f[el.dataset.k]!==undefined)el.value=S.f[el.dataset.k]});
+    if(['jenis','labelPre','labelPost'].includes(t.dataset.k)) rdg();
+    upd();
+  }
+});
+$('#dg').addEventListener('click',e=>{
+  const p=e.target.closest('.seg');if(!p)return;
+  openModal(p.closest('svg').dataset.ph,p.dataset.s);
+});
+$('#ttdf').onchange=e=>{
+  const r=new FileReader();r.onload=()=>{S.ttd=r.result;save()};
+  if(e.target.files[0])r.readAsDataURL(e.target.files[0]);
+};
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.g==='akses'){S.f.akses=b.dataset.v;$$('#chsAkses .ch').forEach(x=>x.classList.toggle('on',x===b));upd();return}
+  const a=b.dataset.a;
+  if(a==='addst'){S.stents.push({seg:'LAD mid',tipe:'DES'});markStent(S.stents.length-1);rst();rdg();upd()}
+  if(b.dataset.del!==undefined){const s=S.stents[b.dataset.del];if(s&&S.seg.B[s.seg]&&S.seg.B[s.seg].s==='stent')delete S.seg.B[s.seg];S.stents.splice(b.dataset.del,1);rst();rdg();upd();return}
+  if(a==='gen'){S.man=false;upd()}
+  if(a==='kes'){S.f.kesimpulan=kes();$$('[data-k]').forEach(el=>{if(el.dataset.k==='kesimpulan')el.value=S.f.kesimpulan});upd()}
+  if(a==='prev'){$('#print').innerHTML=printHTML();document.body.classList.add('pv');scrollTo(0,0)}
+  if(a==='back')document.body.classList.remove('pv');
+  if(a==='print'){$('#print').innerHTML=printHTML();window.print()}
+  if(a==='reset'){if(confirm('Hapus semua isian?')){S=blank();sync()}}
+  if(a==='demo')demo();
+});
+
+function printHTML(){
+  const f=S.f,v=k=>esc(f[k]||'-');
+  const dual=isDual();
+  const kop=`<div class="kop"><div class="logo">[Logo RS]</div><div class="t">RUMAH SAKIT UMUM DAERAH<br>H. ABDUL MANAP<br>KOTA JAMBI<br><span style="font-size:10px">Terakreditasi Paripurna</span></div><div>RM. 97 A</div></div>`;
+  const pt=[['Nama',v('nama')],['No. RM',v('rm')],['No. Registrasi',v('reg')],['Tgl Lahir',tgID(f.lahir)],
+            ['Umur',v('umur')],['Jenis Kelamin',v('jk')],['Nama DPJP',v('dpjp')],['Ruang Rawat',v('ruang')],['Tgl Masuk',tgID(f.masuk)]]
+    .map(([a,b])=>`<tr><td>${a}</td><td>: ${b}</td></tr>`).join('');
+  const ak=AKS.map(a=>(S.f.akses===a?'☑ ':'☐ ')+a).join(' &nbsp; ');
+  const phases=dual?['A','B']:['A'];
+  const leg=phases.flatMap(ph=>SEG.filter(([n])=>S.seg[ph][n]&&S.seg[ph][n].s).map(([n])=>{
+    const s=S.seg[ph][n];
+    return `<tr><td>${esc(label(ph))}</td><td>${n}</td><td>${L[s.s]}</td><td>${s.p?esc(s.p)+'%':'-'}</td><td>${esc(s.n||'-')}</td></tr>`
+  })).join('')||'<tr><td colspan="5" style="text-align:center">Tidak ada anotasi</td></tr>';
+  const dev=S.stents.map(s=>`<tr><td>${esc(s.seg)}</td><td>${esc(s.tipe)}</td><td>${esc(s.merek||'-')}</td><td>${esc(s.dia||'-')} x ${esc(s.pan||'-')} mm</td><td>${esc(s.tek||'-')} / ${esc(s.pd||'-')} atm</td></tr>`).join('');
+
+  return `<section class="pg">
+  ${kop}
+  <div class="tr">
+    <div style="padding-top:8px"><b style="font-size:16px">LAPORAN TINDAKAN</b><br><b style="font-size:14px">RUANG CATHLAB</b><br><span style="font-size:11px">${esc(f.jenis)}</span></div>
+    <table class="pt">${pt}</table>
+  </div>
+  <table class="dt">
+    <tr><td>Tanggal Tindakan</td><td>: ${tgID(f.tgl)}</td><td>Jam Mulai</td><td>: ${v('mulai')}</td><td>Jam Selesai</td><td>: ${v('selesai')}</td></tr>
+    <tr><td>Lama Anestesi</td><td colspan="5">: ${v('anestesi')}</td></tr>
+    <tr><td>Diagnosis Pre</td><td colspan="5">: ${v('pre')}</td></tr>
+    <tr><td>Diagnosis Post</td><td colspan="5">: ${v('post')}</td></tr>
+    <tr><td>Dokter Operator</td><td>: ${v('op')}</td><td>Asisten / Scrub</td><td>: ${v('asisten')}</td><td>Kolimator</td><td>: ${v('kolim')}</td></tr>
+    <tr><td>Sirkuler</td><td>: ${v('perawat')}</td><td>Kateter</td><td>: ${esc([f.kat_diag,f.kat_guide].filter(Boolean).join(' & ')||'-')}</td><td>Kontras</td><td>: ${v('kontras')}</td></tr>
+    <tr><td>Tempat Masuk</td><td colspan="5">: ${ak}</td></tr>
+    <tr><td>Tanda-tanda Vital</td><td colspan="5">: TD ${v('td')} mmHg | RR ${v('rr')} x/mnt | HR ${v('hr')} bpm | Suhu ${v('suhu')} °C</td></tr>
+  </table>
+
+  <h4>Prosedur</h4>
+  <div class="dp${dual?'':' single'}">
+    ${phases.map(ph=>`<div><b>${esc(label(ph))}</b>${svgHTML(ph)}</div>`).join('')}
+  </div>
+  ${LG}
+  <h4>Keterangan Segmen</h4>
+  <table class="lt"><tr><th>Fase</th><th>Segmen</th><th>Status</th><th>Stenosis</th><th>Catatan</th></tr>${leg}</table>
+  ${dev?`<h4>Stent &amp; Perangkat</h4><table class="lt"><tr><th>Segmen</th><th>Tipe</th><th>Merek</th><th>Ukuran</th><th>Tekanan / post</th></tr>${dev}</table>`:''}
+
+  <h4>Narasi Tindakan</h4>
+  <div class="nr">${esc(f.narasi)}</div>
+
+  <p style="margin-top:10px"><b>Kesimpulan:</b><br>${v('kesimpulan')}</p>
+
+  <div class="ft">
+    <div><b>Tembusan:</b><ol><li>Rekam Medis</li><li>BPJS</li><li>Cathlab</li><li>Operator</li></ol></div>
+    <div class="ttd">
+      Kota Jambi, ${tgID(f.ttd_tgl)}<br>
+      <b>DPJP Jantung</b>
+      ${S.ttd?`<img src="${S.ttd}">`:'<div class="sp"></div>'}
+      ( ${v('ttd_nama')} )
+    </div>
+  </div>
+  </section>`;
+}
+
+function sync(){
+  $$('[data-k]').forEach(el=>{if(S.f[el.dataset.k]!==undefined)el.value=S.f[el.dataset.k]});
+  $$('#chsAkses .ch').forEach(x=>x.classList.toggle('on',x.dataset.v===S.f.akses));
+  rdg();rst();upd(true);
+}
+function demo(){
+  S=blank();
+  Object.assign(S.f,{rm:'00051563',nama:'DARMAWAN',reg:'2609030130',lahir:'1982-07-01',umur:'44 tahun',
+    jk:'Laki-laki',dpjp:'dr. Puspita Sari Bustanul, Sp.JP',ruang:'Cathlab',masuk:'2026-09-03',
+    tgl:'2026-09-03',mulai:'23:21',selesai:'00:20',anestesi:'',jenis:'PCI / PPCI',labelPre:'PRE PCI',labelPost:'POST PCI',
+    pre:'Stemi Anterior Onset 7 Jam',post:'Stemi Anterior Onset 7 Jam, Post PPCI 1 DES mid LAD, CAD 1VD',
+    op:'dr. Puspita, Sp.JP (K)',asisten:'Ginda Sorip Naposo, Amd.Kep',perawat:'ADE, Am.Kep',kolim:'Marlengga',
+    akses:'Radialis kanan',sheath:'6',kat_diag:'TIG 3.5/5F',kat_guide:'EBU 3.5/6F',hep:'3300',ntg:'300',
+    kontras:'Hexiol',kontras_vol:'150',radiasi:'413',darah:'30',td:'130/70',hr:'76',rr:'26',suhu:'36.6',urine:'100',
+    komplikasi:'Tidak ada',kesimpulan:'CAD 1VD, post PPCI 1 DES di mid LAD',
+    ttd_tgl:'2026-09-04',ttd_nama:'dr. Puspita'});
+  S.seg.A={'LAD mid':{s:'stenosis',p:'95-99',n:'thrombus gr IV, TIMI 1-2'},
+           'RCA mid':{s:'stenosis',p:'10-20',n:'irregular proksimal-mid'}};
+  S.stents=[{seg:'LAD mid',tipe:'DES',merek:'Eternia',dia:'3.0',pan:'24',tek:'10',pd:'12'}];
+  markStent(0);
+  sync();
+}
+sync();
+</script>
+</body>
+</html>
