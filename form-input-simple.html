@@ -87,6 +87,8 @@ body.pv .pvbar{display:flex}
   .pg{page-break-after:always}
   .pg:last-child{page-break-after:auto}
 }
+.bc-box{border:1px dashed #bcc7d0;border-radius:6px;padding:10px;background:#fff;overflow:hidden}
+.bc-err{font-size:12px;color:#dc2626;margin-top:4px}
 </style>
 </head>
 <body>
@@ -120,6 +122,7 @@ body.pv .pvbar{display:flex}
 <div class="pvbar"><button data-a="back">← Kembali</button><button class="b1" onclick="window.print()">Cetak</button></div>
 <div id="print"></div>
 
+<script src="js/lib/JsBarcode.all.min.js"></script>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const SEG=[["LM","M 180 60 Q 175 85 170 105",185,70],["LAD prox","M 170 105 Q 150 140 130 180",115,150],["LAD mid","M 130 180 Q 115 220 110 260",80,230],["LAD distal","M 110 260 Q 105 290 115 315",75,300],["D1","M 140 160 Q 175 175 200 200",185,190],["D2","M 125 210 Q 155 230 175 255",160,240],["LCX prox","M 170 105 Q 220 115 250 140",215,125],["LCX mid","M 250 140 Q 280 165 295 200",275,180],["LCX distal","M 295 200 Q 305 230 300 260",295,250],["OM1","M 250 145 Q 255 190 245 230",235,185],["OM2","M 285 185 Q 285 220 280 250",288,225],["RCA prox","M 400 90 Q 420 130 425 175",422,130],["RCA mid","M 425 175 Q 425 220 415 260",422,220],["RCA distal","M 415 260 Q 400 300 380 320",388,305],["PDA","M 415 260 Q 370 265 340 275",365,258],["PLV","M 400 295 Q 370 300 350 305",355,322]];
@@ -193,9 +196,20 @@ SC('s5','5. Narasi & Kesimpulan',`<div class="g">
   </div>
 </div>`)+
 
-SC('s6','6. Tanda Tangan',`<div class="g">
+SC('s6','6. Barcode Laporan',`<div class="g">
   ${F('ttd_tgl','Tanggal TTD','date')}${F('ttd_nama','DPJP jantung','text','','w2')}
-  <div class="fd"><label>Gambar tanda tangan (opsional)</label><input type="file" accept="image/*" id="ttdf"></div>
+  <div class="fd wf" data-w="barcode"><label>Isi barcode (otomatis dari No. RM + tanggal, bisa diubah)</label>
+    <input data-k="barcode" id="barcodeText" placeholder="mis. CATHLAB-00051563-20260903">
+    <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">
+      <button data-a="bcgen" type="button">Generate barcode</button>
+      ${['CODE128','CODE39','EAN13'].map(x=>`<button data-a="bctype" data-t="${x}" type="button">${x}</button>`).join('')}
+      <span style="font-size:12px;color:var(--mu);align-self:center">Tipe: <b id="bcTypeLbl">CODE128</b></span>
+    </div>
+  </div>
+  <div class="fd wf" data-w="barcodeBox"><label>Pratinjau barcode</label>
+    <div class="bc-box" id="barcodeBox"></div>
+    <div class="bc-err" id="barcodeErr"></div>
+  </div>
 </div>`);
 
 $('#chsAkses').innerHTML=AKS.map(a=>`<button type="button" class="ch" data-g="akses" data-v="${a}">${a}</button>`).join('');
@@ -241,6 +255,7 @@ function upd(silent){
   $('#wPre').style.display=j.phase==='dual'?'':'none';
   $('#wPost').style.display=j.phase==='dual'?'':'none';
   if(!silent)save();
+  if(typeof bcUpdate==='function')bcUpdate();
 }
 function save(){try{localStorage.setItem('cl2:cur',JSON.stringify(S))}catch(e){}}
 
@@ -318,10 +333,37 @@ $('#dg').addEventListener('click',e=>{
   const p=e.target.closest('.seg');if(!p)return;
   openModal(p.closest('svg').dataset.ph,p.dataset.s);
 });
-$('#ttdf').onchange=e=>{
-  const r=new FileReader();r.onload=()=>{S.ttd=r.result;save()};
-  if(e.target.files[0])r.readAsDataURL(e.target.files[0]);
-};
+/* ==== BARCODE ==== */
+function bcAuto(){const f=S.f;return 'CATHLAB-'+(f.rm||'000000')+'-'+((f.tgl||'').replace(/-/g,'')||'00000000')}
+function bcVal(){const v=(S.f.barcode||'').trim();return v||bcAuto()}
+function bcType(){return S.bcType||'CODE128'}
+/* true bila barcode masih sama dengan hasil auto (belih diubah manual) */
+function bcAutoStill(){return (S.f.barcode||'').trim()===bcAuto()}
+function bcRender(){
+  const box=$('#barcodeBox'), err=$('#barcodeErr');
+  if(!box||typeof JsBarcode==='undefined')return;
+  const v=bcVal(), t=bcType();
+  err.textContent='';
+  // Catatan: JsBarcode hanya menerima elemen SVG (bukan DIV), jadi render ke <svg>.
+  try{
+    box.innerHTML='<svg id="bcSvg" width="100%" height="56"></svg>';
+    JsBarcode('#bcSvg',v,{format:t,displayValue:true,fontSize:15,height:42,margin:6,lineColor:'#000',textMargin:2});
+    box.setAttribute('data-bc',v);box.setAttribute('data-bc-type',t);
+  }catch(x){
+    box.innerHTML='';
+    box.removeAttribute('data-bc');
+    err.textContent='Barcode gagal: '+(x.message||'format tidak didukung untuk nilai ini');
+  }
+}
+function bcUpdate(){
+  // barcode mengikuti No. RM / tanggal selama belum diubah manual
+  if(bcAutoStill())S.f.barcode=bcAuto();
+  const inp=$('[data-k="barcode"]');
+  if(inp&&document.activeElement!==inp)inp.value=S.f.barcode||'';
+  const lbl=$('#bcTypeLbl');
+  if(lbl)lbl.textContent=bcType();
+  bcRender();
+}
 document.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
   if(b.dataset.g==='akses'){S.f.akses=b.dataset.v;$$('#chsAkses .ch').forEach(x=>x.classList.toggle('on',x===b));upd();return}
@@ -330,6 +372,8 @@ document.addEventListener('click',e=>{
   if(b.dataset.del!==undefined){const s=S.stents[b.dataset.del];if(s&&S.seg.B[s.seg]&&S.seg.B[s.seg].s==='stent')delete S.seg.B[s.seg];S.stents.splice(b.dataset.del,1);rst();rdg();upd();return}
   if(a==='gen'){S.man=false;upd()}
   if(a==='kes'){S.f.kesimpulan=kes();$$('[data-k]').forEach(el=>{if(el.dataset.k==='kesimpulan')el.value=S.f.kesimpulan});upd()}
+  if(a==='bcgen'){S.f.barcode=bcAuto();$$('[data-k]').forEach(el=>{if(el.dataset.k==='barcode')el.value=S.f.barcode});bcRender();upd()}
+  if(a==='bctype'){S.bcType=b.dataset.t;bcRender();save();$('#bcTypeLbl').textContent=bcType()}
   if(a==='prev'){$('#print').innerHTML=printHTML();document.body.classList.add('pv');scrollTo(0,0)}
   if(a==='back')document.body.classList.remove('pv');
   if(a==='print'){$('#print').innerHTML=printHTML();window.print()}
@@ -337,6 +381,25 @@ document.addEventListener('click',e=>{
   if(a==='demo')demo();
 });
 
+/* JsBarcode hanya bisa: (1) merender ke elemen DOM, atau (2) mengembalikan SVG
+   bila dipanggil sebagai JsBarcode(svgElement, value, opts) pada elemen svg.
+   Untuk HTML string kita buat elemen svg sekali, render ke situ, lalu ambil
+   outerHTML-nya supaya hasilnya benar-benar inline ( tajam saat dicetak ). */
+function bcSVGMarkup(value,opts){
+  const holder=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  holder.setAttribute('width','240');holder.setAttribute('height','46');
+  const markup=JsBarcode(holder,value,opts);
+  return (typeof markup==='string'&&markup)?markup:holder.outerHTML;
+}
+function bcPrintHTML(){
+  try{
+    return '<div style="margin-top:6px;text-align:center">'+
+      bcSVGMarkup(bcVal(),{format:bcType(),displayValue:true,fontSize:11,height:38,margin:3,lineColor:'#000',textMargin:1})+
+      '</div>';
+  }catch(e){
+    return `<div style="font-size:10px;margin-top:6px">[${esc(bcVal())}]</div>`;
+  }
+}
 function printHTML(){
   const f=S.f,v=k=>esc(f[k]||'-');
   const dual=isDual();
@@ -388,8 +451,9 @@ function printHTML(){
     <div class="ttd">
       Kota Jambi, ${tgID(f.ttd_tgl)}<br>
       <b>DPJP Jantung</b>
-      ${S.ttd?`<img src="${S.ttd}">`:'<div class="sp"></div>'}
+      <div style="height:52px"></div>
       ( ${v('ttd_nama')} )
+      ${bcPrintHTML()}
     </div>
   </div>
   </section>`;
@@ -399,6 +463,7 @@ function sync(){
   $$('[data-k]').forEach(el=>{if(S.f[el.dataset.k]!==undefined)el.value=S.f[el.dataset.k]});
   $$('#chsAkses .ch').forEach(x=>x.classList.toggle('on',x.dataset.v===S.f.akses));
   rdg();rst();upd(true);
+  if(typeof bcRender==='function')bcRender();
 }
 function demo(){
   S=blank();

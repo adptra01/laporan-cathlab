@@ -63,7 +63,27 @@
     }
   };
 
-  /* ---------- shortcut tipe ---------- */
+  /* ---------- Integrasi SIMRS (dokumentasi + helper) ---------- */
+/* Endpoint master data yang dipakai form:
+   GET {BASE_URL}/MASTER/pasien/{no_rm} → { nama_lengkap, no_registrasi, tgl_lahir,
+       jk, alamat, no_telepon, penjamin, dpjp_masuk, ruang, kelas }
+   GET {BASE_URL}/MASTER/dokter        → [ { nama_lengkap }, … ]
+   Pemetaan field & konfigurasi ada di form-input-lengkap.html (SIMRS_CONFIG,
+   FIELD_MAP, fetchPasien, fetchDokter). Lihat simrs-guide.html untuk penjelasan. */
+var SIMRS_DOCS = {
+  baseUrl: '',
+  pasienPath: '/MASTER/pasien/{no_rm}',
+  dokterPath: '/MASTER/dokter',
+  fieldMap: {
+    nama: 'nama_lengkap', reg: 'no_registrasi', lahir: 'tgl_lahir', jk: 'jk',
+    alamat: 'alamat', telp: 'no_telepon', penjamin: 'penjamin',
+    dpjpMasuk: 'dpjp_masuk', ruang: 'ruang', kelas: 'kelas'
+  },
+  autoFill: 'No. RM + Enter → nama, No. Registrasi, tgl lahir, jenis kelamin, alamat, telepon, penjamin, DPJP masuk, ruang, kelas; umur dihitung otomatis',
+  offline: 'Bila BASE_URL kosong, form memakai PASIEN_DB/DOKTER_DB lokal (mode demo).'
+};
+
+/* ---------- shortcut tipe ---------- */
   function T(k, label, extra) { return merge({ k: k, label: label, type: 'text' }, extra); }
   function N(k, label, min, max, extra) { return merge({ k: k, label: label, type: 'number', min: min, max: max }, extra); }
   function D(k, label, extra) { return merge({ k: k, label: label, type: 'date' }, extra); }
@@ -82,7 +102,7 @@
     {
       id: 's1', n: 1, title: 'Pasien & Identitas',
       simpleTitle: '1. Pasien & Tindakan', lengkapTitle: '1. Identitas Pasien',
-      desc: 'Identitas dasar pasien sebagai kunci rekam medis. Pada form Lengkap, kolom No. RM dipakai untuk auto-load data pasien dari SIMRS (tekan Enter).',
+      desc: 'Identitas dasar pasien sebagai kunci rekam medis. Pada form Lengkap, No. RM + Enter memanggil master pasien SIMRS (GET /api/MASTER/pasien/{no_rm}); field terpetakan: nama, No. Registrasi, tgl lahir, jenis kelamin, alamat, telepon, penjamin, DPJP masuk, ruang, kelas. Datalist dokter diisi dari /api/MASTER/dokter. Kolom di bawah readonly karena bersumber dari SIMRS.',
       fields: [
         T('rm', 'No. RM *', { required: true, pattern: '^[0-9]{4,12}$', patternMsg: 'No. RM harus 4–12 digit angka', min: 4, max: 12, example: '00051563', f: ['S', 'L'], tips: 'Tanpa nol di depan akan gagal. Gunakan No. RM resmi dari rekam medis.', errors: ['Kosong → "No. RM harus diisi" (wajib)', 'Mengandung huruf → "No. RM harus 4–12 digit angka"', 'Lebih dari 12 digit → "Maksimal 12 karakter"'] }),
         T('nama', 'Nama Lengkap *', { required: true, min: 3, max: 80, example: 'DARMAWAN', f: ['S', 'L'], onlyL: true, tips: 'Di form Lengkap kolom ini terisi otomatis setelah No. RM di-enter.', errors: ['Kosong → "Wajib diisi"', '<Kurang 3 karakter → "Minimal 3 karakter"'] }),
@@ -91,7 +111,7 @@
         SEL('jk', 'Jenis Kelamin', ['', 'Laki-laki', 'Perempuan'], { f: ['S', 'L'], example: 'Laki-laki', tips: 'Kosong berarti belum diisi — pilih salah satu.', errors: ['Nilai di luar daftar → "Pilihan tidak valid"'] }),
         T('umur', 'Umur', { example: '44 tahun', f: ['S', 'L'], auto: true, tips: 'Diisi otomatis dari tanggal lahir. Pada form Lengkap bersifat read-only.', errors: [] }),
         SEL('penjamin', 'Penjamin', ['Umum', 'BPJS Kesehatan', 'Asuransi Lain', 'Perusahaan'], { f: ['L'], default: 'BPJS Kesehatan', example: 'BPJS Kesehatan', tips: 'Hanya ada di form Lengkap.', errors: [] }),
-        T('dpjpMasuk', 'DPJP Masuk', { max: 60, example: 'dr. Puspita Sari Bustanul, Sp.JP', f: ['L'], tips: 'Ada datalist: nama yang pernah diketik tersimpan sebagai saran.', errors: ['Lebih dari 60 karakter → "Maksimal 60 karakter"'] }),
+        T('dpjpMasuk', 'DPJP Masuk', { max: 60, example: 'dr. Puspita Sari Bustanul, Sp.JP', f: ['L'], tips: 'Datalist diisi otomatis dari master dokter SIMRS (/api/MASTER/dokter). Nama yang pernah diketik juga tersimpan sebagai saran lokal.', errors: ['Lebih dari 60 karakter → "Maksimal 60 karakter"'] }),
         T('dpjp', 'DPJP', { max: 60, example: 'dr. Puspita Sari Bustanul, Sp.JP', f: ['S'], tips: 'Nama dokter penanggung jawab pasien / konsultan jantung.', errors: [] }),
         T('alamat', 'Alamat', { max: 200, example: 'Jl. Merdeka No. 45, Jambi', f: ['L'], onlyL: true, tips: 'Read-only di form Lengkap (dari SIMRS).', errors: [] }),
         T('telp', 'No. Telepon', { pattern: '^0\\d{8,13}$', patternMsg: 'Nomor telepon Indonesia diawali 0, 9–14 digit', example: '081234567890', f: ['L'], onlyL: true, tips: 'Untuk kasus pasien rawat inap / ihrem bila perlu dihubungi.', errors: ['Tidak diawali 0 → ditolak format', 'Lebih dari 14 digit → ditolak'] })
@@ -263,15 +283,16 @@
       ]
     },
     {
-      id: 's13', n: 13, title: 'Tembusan & Tanda Tangan',
-      simpleTitle: '6. Tanda Tangan', lengkapTitle: '14. Tembusan & TTD',
-      desc: 'Distribusi laporan dan tanda tangan DPJP. Tanda tangan berupa gambar (PNG/JPG) yang disimpan di browser — tidak diunggah ke server.',
+      id: 's13', n: 13, title: 'Tembusan & Barcode',
+      simpleTitle: '6. Barcode Laporan', lengkapTitle: '14. Tembusan & Barcode',
+      desc: 'Distribusi laporan dan barcode identifikasi. Barcode dibuat otomatis dari No. RM + tanggal tindakan (dapat diubah manual), menggantikan former gambar tanda tangan. Tidak ada file yang diunggah ke server.',
       fields: [
         D('ttd_tgl', 'Tanggal TTD', { f: ['S'], simpleKey: true, example: '2026-09-04', tips: 'Default = hari ini.', errors: ['Tanggal tidak valid → ditolak'] }),
         D('ttdTgl', 'Tanggal TTD', { f: ['L'], example: '2026-09-04', tips: 'Default = hari ini.', errors: [] }),
         T('ttd_nama', 'Nama DPJP Jantung', { max: 60, f: ['S'], simpleKey: true, example: 'dr. Puspita', tips: 'Dicetak di bawah area tanda tangan.', errors: [] }),
         T('ttdNama', 'Nama DPJP Jantung', { required: true, max: 60, f: ['L'], example: 'dr. Puspita Sari Bustanul, Sp.JP', tips: 'Wajib terisi di form Lengkap.', errors: ['Kosong → "Wajib diisi"'] }),
-        { k: 'ttdf', label: 'Gambar Tanda Tangan', type: 'file', f: ['S'], example: 'ttd.png (disarankan transparan)', tips: 'PNG dengan latar transparan menghasilkan hasil cetak terbaik.', errors: ['File bukan gambar → input ditolak browser'] },
+        { k: 'barcode', label: 'Barcode Laporan', type: 'text', f: ['S', 'L'], max: 60, example: 'CATHLAB-00051563-20260903', tips: 'Dibuat otomatis dari No. RM + tanggal tindakan. Berubah otomatis selama belum diedit manual; tombol "Generate barcode" mengembalikan ke nilai otomatis. Tipe: CODE128 (default), CODE39, EAN13.', errors: ['Nilai tidak cocok dengan format barcode → "Barcode gagal: format tidak didukung untuk nilai ini" (nilai tetap dicetak sebagai teks)'] },
+        { k: 'barcodeBox', label: 'Pratinjau Barcode', type: 'diagram', f: ['S', 'L'], example: 'SVG barcode dengan nilai tercetak di bawahnya', tips: 'Barcode ikut tercetak pada semua template (Laporan Lengkap, Ringkas, Epikrisis). Dicetak sebagai SVG inline sehingga tetap tajam.', errors: [] },
         { k: 'tem', label: 'Tembusan', type: 'chips', f: ['L'], options: ['Rekam Medis', 'BPJS', 'Cathlab', 'Operator', 'Pasien'], default: 'Rekam Medis, BPJS, Cathlab, Operator', tips: 'Centang tujuan distribusi; tercetak di footer laporan.', errors: [] }
       ]
     }
@@ -320,6 +341,7 @@
 
   global.CathlabSchema = {
     V: V, SECTIONS: SECTIONS, validate: validate,
-    fieldByKey: fieldByKey, sectionsFor: sectionsFor
+    fieldByKey: fieldByKey, sectionsFor: sectionsFor,
+    SIMRS: SIMRS_DOCS
   };
 })(window);

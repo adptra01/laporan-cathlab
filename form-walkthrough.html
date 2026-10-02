@@ -59,6 +59,7 @@
   <nav>
     <a href="form-guide.html">Interactive Guide</a>
     <a href="form-docs.html">Dokumentasi Form</a>
+    <a href="simrs-guide.html">Integrasi SIMRS</a>
     <a href="index.html">← Halaman Depan</a>
   </nav>
 </div>
@@ -119,8 +120,8 @@
         'narasi', 'kesimpulan']
     },
     {
-      id: 7, title: 'Tembusan & Tanda Tangan', goal: 'Tentukan distribusi laporan dan isi nama penanda tangan.',
-      keys: ['ttd_tgl', 'ttdTgl', 'ttd_nama', 'ttdNama', 'ttdf', 'tem']
+      id: 7, title: 'Tembusan & Barcode', goal: 'Tentukan distribusi laporan dan barcode identifikasi yang ikut tercetak.',
+      keys: ['ttd_tgl', 'ttdTgl', 'ttd_nama', 'ttdNama', 'barcode', 'barcodeBox', 'tem']
     }
   ];
 
@@ -229,6 +230,7 @@
     if (f.min != null) spec.push('min <code>' + f.min + '</code>');
     if (f.max != null) spec.push('maks <code>' + f.max + '</code>');
     if (f.pattern) spec.push('pola <code>' + esc(f.pattern) + '</code>');
+    if (f.k === 'barcode') spec.push('otomatis dari No. RM + tanggal');
 
     return '<div class="' + cls + '" data-k="' + esc(f.k) + '">' +
       '<label for="w_' + esc(f.k) + '">' + esc(f.label) +

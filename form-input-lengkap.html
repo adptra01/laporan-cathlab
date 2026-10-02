@@ -137,8 +137,9 @@ body.pv .pvbar{display:flex}
 .ft{display:flex;justify-content:space-between;margin-top:18px}
 .ft ol{margin:3px 0;padding-left:16px}
 .ttd{text-align:center;min-width:220px}
-.ttd img{height:60px;display:block;margin:2px auto}
 .ttd .sp{height:60px}
+.bc-box{border:1px dashed #bcc7d0;border-radius:6px;padding:10px;background:#fff;overflow:hidden}
+.bc-err{font-size:12px;color:var(--err);margin-top:4px}
 .dp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .dp.single{grid-template-columns:1fr;max-width:420px;margin:0 auto}
 .dp svg{max-height:240px}
@@ -170,6 +171,7 @@ body.pv .pvbar{display:flex}
     <button data-a="imp">Impor</button>
     <input type="file" id="impf" accept=".json" hidden>
     <button data-a="hist">Riwayat</button>
+    <a href="simrs-guide.html" style="font:inherit;font-size:13px;padding:7px 13px;border:1px solid var(--ln);border-radius:6px;text-decoration:none;color:var(--ink);align-self:center">Panduan SIMRS</a>
     <button data-a="prev">Pratinjau</button>
     <button class="b1" data-a="print">Cetak</button>
   </div>
@@ -200,6 +202,7 @@ body.pv .pvbar{display:flex}
 </div>
 <div id="print"></div>
 
+<script src="js/lib/JsBarcode.all.min.js"></script>
 <script>
 'use strict';
 /* =========================================================
@@ -280,15 +283,120 @@ const blank=()=>({
     kesimpulan:'',narasi:'',
     ttdTgl:today(),ttdNama:'',temRm:1,temBpjs:1,temCath:1,temOp:1,temPasien:0},
   akses:[],vitals:[],meds:[],seg:{A:{},B:{}},stents:[],
-  ttd:'',man:false,status:'Draft',audit:[]
+  ttd:'',barcode:'',bcType:'CODE128',man:false,status:'Draft',audit:[]
 });
 
-const PASIEN_DB={
-  '00051563':{nama:'DARMAWAN',reg:'2609030130',lahir:'1982-07-01',jk:'Laki-laki',
-    alamat:'Jl. Merdeka No. 45, Jambi',telp:'0812-3456-7890',penjamin:'BPJS Kesehatan',
-    dpjpMasuk:'dr. Puspita Sari Bustanul, Sp.JP',ruang:'Cathlab 1',kelas:'VIP'}
+/* =========================================================
+   MASTER DATA SIMRS — konfigurasi endpoint
+   ------------------------------------------------------------
+   Cara kerja:
+   1. Base URL + token diisi di blok SIMRS_CONFIG (atau diset
+      lewat localStorage: localStorage.setItem('cathlab:simrs', JSON.stringify(cfg))).
+   2. Saat No. RM diisi lalu Enter → form memanggil GET /api/MASTER/pasien/{no_rm}.
+   3. Field yang dipetakan (FIELD_MAP) otomatis mengisi form.
+   4._dpjp_ diambil dari /api/MASTER/dokter (datalist saran nama dokter).
+   Bila BASE_URL kosong → memakai PASIEN_DB lokal (mode demo/offline).
+
+   Contoh responded SIMRS (field dikustomisasi agar tidak bocor data asli):
+   { "no_rm":"00051563","no_registrasi":"2609030130","nama_lengkap":"DARMAWAN",
+     "tgl_lahir":"1982-07-01","jk":"Laki-laki","alamat":"Jl. Merdeka No. 45, Jambi",
+     "no_telepon":"081234567890","penjamin":"BPJS Kesehatan",
+     "dpjp_masuk":"dr. Puspita Sari Bustanul, Sp.JP","ruang":"Cathlab 1","kelas":"VIP" }
+   ========================================================= */
+const SIMRS_CONFIG={
+  BASE_URL:'',            // contoh: 'https://simrs.rsudham-ap.go.id/api/rest'
+  TOKEN:'',               // token API / bearer
+  TIMEOUT_MS:8000,
+  PASIEN_PATH:'/MASTER/pasien/{no_rm}',
+  DOKTER_PATH:'/MASTER/dokter'
 };
-async function fetchPasien(rm){return PASIEN_DB[rm]||null}
+
+/* Pemetaan field SIMRS → field form (dapat disesuaikan) */
+const FIELD_MAP={
+  nama:'nama_lengkap', reg:'no_registrasi', lahir:'tgl_lahir', jk:'jk',
+  alamat:'alamat', telp:'no_telepon', penjamin:'penjamin',
+  dpjpMasuk:'dpjp_masuk', ruang:'ruang', kelas:'kelas'
+};
+
+/* Data lokal memakai bentuk respons SIMRS (key snake_case) agar alur mapPasien
+   identik baik pada mode online maupun offline */
+const PASIEN_DB={
+  '00051563':{no_rm:'00051563',nama_lengkap:'DARMAWAN',no_registrasi:'2609030130',
+    tgl_lahir:'1982-07-01',jk:'Laki-laki',alamat:'Jl. Merdeka No. 45, Jambi',
+    no_telepon:'0812-3456-7890',penjamin:'BPJS Kesehatan',
+    dpjp_masuk:'dr. Puspita Sari Bustanul, Sp.JP',ruang:'Cathlab 1',kelas:'VIP'}
+};
+/* Fallback nama dokter untuk mode demo */
+const DOKTER_DB=['dr. Puspita Sari Bustanul, Sp.JP','dr. Andi, Sp.JP','dr. Siti Aminah, Sp.JP'];
+
+function simrsCfg(){
+  let c={...SIMRS_CONFIG};
+  try{const s=JSON.parse(localStorage.getItem('cathlab:simrs')||'null');if(s&&typeof s==='object')c={...c,...s}}catch(e){}
+  return c;
+}
+async function simrsGet(path){
+  const c=simrsCfg();
+  if(!c.BASE_URL)return null;                       // mode offline → pakai DB lokal
+  const ctl=new AbortController();
+  const t=setTimeout(()=>ctl.abort(),c.TIMEOUT_MS||8000);
+  try{
+    const res=await fetch(c.BASE_URL+path,{signal:ctl.signal,headers:c.TOKEN?{Authorization:'Bearer '+c.TOKEN}:{}});
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    return await res.json();
+  }finally{clearTimeout(t)}
+}
+function mapPasien(raw){
+  const out={};
+  Object.keys(FIELD_MAP).forEach(k=>{const v=raw[FIELD_MAP[k]];if(v!==undefined&&v!==null)out[k]=v});
+  // bersihkan format telepon (SIMRS kadang menyimpan dengan tanda hubung/spasi)
+  if(out.telp)out.telp=String(out.telp).replace(/[^0-9]/g,'');
+  // pastikan tanggal lahir format YYYY-MM-DD
+  if(out.lahir){
+    const s=String(out.lahir).trim();
+    let iso=null;
+    let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);                 // 1982-07-01
+    if(m) iso=`${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+    else if((m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/))){ // 01/07/1982 (Indonesia: DD/MM/YYYY)
+      iso=`${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+    }else{
+      const d=new Date(s);
+      if(!isNaN(d.getTime())) iso=d.toISOString().slice(0,10);
+    }
+    if(iso&&/^\d{4}-\d{2}-\d{2}$/.test(iso)&&!isNaN(new Date(iso+'T00:00:00').getTime())) out.lahir=iso;
+  }
+  return out;
+}
+/* Ambil data pasien dari SIMRS; null bila tidak tersedia */
+async function fetchPasien(rm){
+  const key=(rm||'').trim();
+  if(!key)return null;
+  try{
+    const c=simrsCfg();
+    if(c.BASE_URL){
+      const raw=await simrsGet(c.PASIEN_PATH.replace('{no_rm}',encodeURIComponent(key)));
+      const data=(raw&&(raw.data||raw.result||raw));
+      if(data&&typeof data==='object')return mapPasien(data);
+      return null;
+    }
+  }catch(e){
+    // Jaringan gagal / HTTP error / timeout → fallback ke data lokal
+    console.warn('[SIMRS] gagal ambil pasien:',e.message);
+    return PASIEN_DB[key]?mapPasien(PASIEN_DB[key]):null;
+  }
+  // mode offline: data lokal sudah berbentuk respons SIMRS → tetap lewat mapPasien
+  return PASIEN_DB[key]?mapPasien(PASIEN_DB[key]):null;
+}
+/* Ambil daftar dokter untuk datalist saran DPJP */
+async function fetchDokter(){
+  const c=simrsCfg();
+  if(!c.BASE_URL)return DOKTER_DB.slice();
+  try{
+    const raw=await simrsGet(c.DOKTER_PATH);
+    const arr=(raw&&(raw.data||raw.result))||raw;
+    if(Array.isArray(arr))return arr.map(d=>typeof d==='string'?d:(d.nama_lengkap||d.nama)).filter(Boolean);
+  }catch(e){console.warn('[SIMRS] gagal ambil dokter:',e.message)}
+  return DOKTER_DB.slice();
+}
 
 /* =========================================================
    PERSISTENCE
@@ -400,7 +508,9 @@ const SECTIONS=[
 ];
 
 function sec_identitas(){
-  return sec_wrap('s1','Identitas Pasien','Isi No. RM lalu tekan <b>Enter</b> untuk auto-load dari SIMRS.',
+  return sec_wrap('s1','Identitas Pasien','Isi No. RM lalu tekan <b>Enter</b> untuk auto-load dari SIMRS. '+
+    '<button type="button" class="b2" data-a="simrsTest" style="font-size:11px;padding:3px 8px">Uji koneksi</button> '+
+    '<span id="simrsSt" style="font-size:11px;color:var(--mu)"></span>',
     `<div class="g">
       ${fd('rm','No. RM *','text','placeholder="00051563" id="rmInput"')}
       ${fd('nama','Nama Lengkap *','text','readonly')}
@@ -577,8 +687,7 @@ function sec_narasi(){
     </div>`);
 }
 function sec_ttd(){
-  const ttdImg=S.ttd?`<div class="fd" style="grid-column:1/-1"><label>Tanda tangan tersimpan</label><div><img src="${S.ttd}" style="max-height:70px;border:1px solid var(--ln);padding:4px;background:#fff"><button data-a="clrTtd" type="button" style="margin-left:8px">Hapus</button></div></div>`:'';
-  return sec_wrap('s14','Tembusan & Tanda Tangan','Tentukan tujuan distribusi dan tanda tangan DPJP.',
+  return sec_wrap('s14','Tembusan & Barcode','Tentukan tujuan distribusi dan barcode identifikasi laporan.',
     `<div class="g">
       <div class="fd wf"><label>Tembusan</label>
         <div class="chs">
@@ -587,8 +696,18 @@ function sec_ttd(){
       </div>
       ${fd('ttdTgl','Tanggal TTD','date')}
       ${fd('ttdNama','Nama DPJP Jantung','text','list=dpjpList')}
-      <div class="fd"><label>Gambar Tanda Tangan</label><input type="file" accept="image/*" id="ttdInput"></div>
-      ${ttdImg}
+      <div class="fd wf" data-w="barcode"><label>Isi barcode (otomatis dari No. RM + tanggal, bisa diubah)</label>
+        <input data-k="barcode" id="barcodeText" placeholder="mis. CATHLAB-00051563-20260903">
+        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+          <button data-a="bcgen" class="b2" type="button">Generate barcode</button>
+          ${['CODE128','CODE39','EAN13'].map(x=>`<button data-a="bctype" data-t="${x}" type="button">${x}</button>`).join('')}
+          <span style="font-size:12px;color:var(--mu)">Tipe: <b id="bcTypeLbl">CODE128</b></span>
+        </div>
+      </div>
+      <div class="fd wf" data-w="barcodeBox"><label>Pratinjau barcode</label>
+        <div class="bc-box" id="barcodeBox"></div>
+        <div class="bc-err" id="barcodeErr"></div>
+      </div>
     </div>`);
 }
 
@@ -615,6 +734,7 @@ function renderAll(){
   // restore narasi textarea
   const nt=$('#narasi');
   if(nt)nt.value=S.f.narasi||'';
+  if(typeof bcUpdate==='function')bcUpdate();
 }
 function refreshHeader(){
   const f=S.f;
@@ -811,6 +931,7 @@ function autoSync(){
   refreshHeader();
   calcJumpStatus();
   save();
+  if(typeof bcUpdate==='function')bcUpdate();
 }
 
 /* =========================================================
@@ -881,12 +1002,7 @@ document.addEventListener('change',e=>{
     refreshDiagramFields();
     autoSync();
   }
-  // TTD upload
-  if(t.id==='ttdInput'){
-    const r=new FileReader();
-    r.onload=()=>{S.ttd=r.result;renderAll();save()};
-    if(t.files[0])r.readAsDataURL(t.files[0]);
-  }
+  // TTD upload — dihapus (diganti barcode)
   // import file
   if(t.id==='impf'){
     const r=new FileReader();
@@ -961,6 +1077,21 @@ document.addEventListener('click',e=>{
   if(a==='addStent'){S.stents.push({seg:'7 LAD mid',tipe:'DES',merek:'',dia:'',pan:'',tek:'',pd:'',lot:'',exp:'',direct:false});attachStent();attachDiagram();autoSync();return}
   if(a==='gen'){S.man=false;S.f.narasi=genNarasi();const el=$('#narasi');if(el)el.value=S.f.narasi;refreshNarNote();autoSync();return}
   if(a==='kes'){S.f.kesimpulan=autoKesimpulan();const inp=document.querySelector('[data-k="kesimpulan"]');if(inp)inp.value=S.f.kesimpulan;autoSync();return}
+  if(a==='simrsTest'){
+    const c=simrsCfg(), st=$('#simrsSt');
+    if(!c.BASE_URL){st.textContent='Mode offline (BASE_URL kosong) — memakai data lokal.';st.style.color='var(--warn)';toast('SIMRS offline: isi BASE_URL untuk mengambil data nyata.','err');return}
+    st.textContent='Menghubungi SIMRS…';st.style.color='var(--mu)';
+    const t=setTimeout(()=>{st.textContent='Timeout '+c.TIMEOUT_MS+' ms';st.style.color='var(--err)'},c.TIMEOUT_MS||8000);
+    fetchDokter().then(list=>{clearTimeout(t);
+      st.textContent='Terhubung · '+list.length+' dokter tersedia';
+      st.style.color='var(--ok)';toast('SIMRS terhubung.','ok');
+    }).catch(e=>{clearTimeout(t);
+      st.textContent='Gagal: '+e.message;st.style.color='var(--err)';toast('Koneksi SIMRS gagal.','err');
+    });
+    return;
+  }
+  if(a==='bcgen'){S.f.barcode=bcAuto();$$('[data-k]').forEach(el=>{if(el.dataset.k==='barcode')el.value=S.f.barcode});bcRender();autoSync();toast('Barcode dibuat: '+S.f.barcode,'ok')}
+  if(a==='bctype'){S.bcType=b.dataset.t;bcRender();save();const l=document.getElementById('bcTypeLbl');if(l)l.textContent=bcType()}
   if(a==='clrTtd'){S.ttd='';renderAll();autoSync();return}
   if(a==='demo'){if(confirm('Muat data contoh? Isian akan tertimpa.'))demo();return}
   if(a==='reset'){if(confirm('Hapus semua isian?')){S=blank();renderAll();save();toast('Form direset.')}return}
@@ -987,14 +1118,20 @@ document.addEventListener('click',e=>{
    ========================================================= */
 async function autoloadPasien(){
   const rm=(S.f.rm||'').trim();
-  if(!rm)return;
+  if(!rm){toast('Isi No. RM dulu.');return}
+  toast('Mengambil data dari SIMRS…');
   const p=await fetchPasien(rm);
-  if(!p){toast('Pasien tidak ditemukan. Isi manual.');return}
+  if(!p){toast('Pasien tidak ditemukan di SIMRS. Isi manual.');return}
   Object.assign(S.f,p);
   S.f.umur=calcUmur(p.lahir,S.f.tgl);
-  snap('Auto-load pasien RM '+rm);
+  snap('Auto-load pasien RM '+rm+' dari SIMRS');
   renderAll();save();
-  toast('Data pasien dimuat.');
+  // perbarui datalist dokter dari SIMRS
+  try{
+    const docs=await fetchDokter();
+    if(docs.length){const dl=$('#dpjpList');if(dl)dl.innerHTML=docs.map(n=>`<option value="${esc(n)}">`).join('')}
+  }catch(e){/* diamkan */}
+  toast('Data pasien dimuat dari SIMRS.');
 }
 
 /* =========================================================
@@ -1122,8 +1259,9 @@ function footerHTML(){
     <div class="ttd">
       Kota Jambi, ${tgID(f.ttdTgl)}<br>
       <b>DPJP Jantung</b>
-      ${S.ttd?`<img src="${S.ttd}">`:'<div class="sp"></div>'}
+      <div class="sp"></div>
       ( ${esc(f.ttdNama||'-')} )
+      ${bcPrintHTML()}
     </div>
   </div>`;
 }
@@ -1237,11 +1375,65 @@ function printEpicrisis(){
       <div class="ttd" style="font-family:inherit">
         Kota Jambi, ${tgID(f.ttdTgl)}<br>
         Dokter Pemeriksa / DPJP<br>
-        ${S.ttd?`<img src="${S.ttd}">`:'<div class="sp"></div>'}
+        <div class="sp"></div>
         <b>${esc(f.ttdNama||'-')}</b>
+        ${bcPrintHTML()}
       </div>
     </div>
   </section>`;
+}
+
+/* =========================================================
+   BARCODE (pengganti tanda tangan gambar)
+   ========================================================= */
+function bcAuto(){const f=S.f;return 'CATHLAB-'+(f.rm||'000000')+'-'+((f.tgl||'').replace(/-/g,'')||'00000000')}
+function bcVal(){const v=(S.f.barcode||'').trim();return v||bcAuto()}
+function bcType(){return S.bcType||'CODE128'}
+/* true bila barcode masih sama dengan hasil auto (belum diubah manual) */
+function bcAutoStill(){return (S.f.barcode||'').trim()===bcAuto()}
+function bcRender(){
+  const box=document.getElementById('barcodeBox'),err=document.getElementById('barcodeErr');
+  if(!box||typeof JsBarcode==='undefined')return;
+  const v=bcVal(),t=bcType();
+  err.textContent='';
+  // Catatan: JsBarcode hanya menerima elemen SVG (bukan DIV), jadi render ke <svg>.
+  try{
+    box.innerHTML='<svg id="bcSvg" width="100%" height="56"></svg>';
+    JsBarcode('#bcSvg',v,{format:t,displayValue:true,fontSize:15,height:42,margin:6,lineColor:'#000',textMargin:2});
+    box.setAttribute('data-bc',v);box.setAttribute('data-bc-type',t);
+  }catch(x){
+    box.innerHTML='';
+    box.removeAttribute('data-bc');
+    err.textContent='Barcode gagal: '+(x.message||'format tidak didukung untuk nilai ini');
+  }
+}
+function bcUpdate(){
+  // barcode mengikuti No. RM / tanggal selama belum diubah manual
+  if(bcAutoStill())S.f.barcode=bcAuto();
+  const inp=document.querySelector('[data-k="barcode"]');
+  if(inp&&document.activeElement!==inp)inp.value=S.f.barcode||'';
+  const lbl=document.getElementById('bcTypeLbl');
+  if(lbl)lbl.textContent=bcType();
+  bcRender();
+}
+/* JsBarcode hanya bisa: (1) merender ke elemen DOM, atau (2) mengembalikan SVG
+   bila dipanggil sebagai JsBarcode(svgElement, value, opts) pada elemen svg.
+   Untuk HTML string kita buat elemen svg sekali, render ke situ, lalu ambil
+   outerHTML-nya supaya hasilnya benar-benar inline ( tajam saat dicetak ). */
+function bcSVGMarkup(value,opts){
+  const holder=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  holder.setAttribute('width','240');holder.setAttribute('height','46');
+  const markup=JsBarcode(holder,value,opts);
+  return (typeof markup==='string'&&markup)?markup:holder.outerHTML;
+}
+function bcPrintHTML(){
+  try{
+    return '<div style="margin-top:6px;text-align:center">'+
+      bcSVGMarkup(bcVal(),{format:bcType(),displayValue:true,fontSize:11,height:38,margin:3,lineColor:'#000',textMargin:1})+
+      '</div>';
+  }catch(e){
+    return `<div style="font-size:10px;margin-top:6px">[${esc(bcVal())}]</div>`;
+  }
 }
 
 /* =========================================================
@@ -1358,6 +1550,12 @@ if(!S.f.narasi&&!S.man){S.f.narasi=genNarasi();const el=$('#narasi');if(el)el.va
 if(S.f.rm&&!S.f.nama){
   fetchPasien(S.f.rm).then(p=>{if(p){Object.assign(S.f,p);renderAll();save()}});
 }
+// isi datalist dokter dari SIMRS saat halaman dibuka
+fetchDokter().then(list=>{
+  if(!list||!list.length)return;
+  const dl=document.getElementById('dpjpList');
+  if(dl)dl.innerHTML=list.map(n=>`<option value="${esc(n)}">`).join('');
+}).catch(()=>{});
 </script>
 </body>
 </html>

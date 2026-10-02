@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Integrasi SIMRS — Master Pasien & Dokter</title>
+<link rel="stylesheet" href="css/docs.css">
+<style>
+.hero{background:#fff;border:1px solid var(--ln);border-radius:10px;padding:18px 20px;margin-bottom:14px}
+.hero h1{margin:0 0 6px;font-size:22px}
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 14px}
+.node{background:#f0fdfa;border:1px solid var(--ac);border-radius:8px;padding:8px 12px;font-size:12.5px;font-weight:600;color:var(--ac)}
+.arrow{color:var(--mu);font-size:18px}
+pre{background:#0f1e2b;color:#e2e8f0;padding:12px 14px;border-radius:8px;overflow-x:auto;font:12px/1.6 Consolas,monospace;margin:0}
+pre .k{color:#7dd3fc}pre .s{color:#a5f3a0}pre .c{color:#94a3b8}
+table td code{white-space:nowrap}
+.env{background:#fffbeb;border:1px solid var(--warn);border-radius:8px;padding:10px 12px;font-size:12.5px;margin:10px 0}
+</style>
+</head>
+<body>
+
+<div class="dbar">
+  <div class="t">Cathlab Docs · Integrasi SIMRS</div>
+  <nav>
+    <a href="form-guide.html">Interactive Guide</a>
+    <a href="form-docs.html">Dokumentasi Form</a>
+    <a href="form-walkthrough.html">Walkthrough</a>
+    <a href="form-input-lengkap.html">Form Lengkap</a>
+    <a href="form-input-simple.html">Form Simple</a>
+    <a href="index.html">← Halaman Depan</a>
+  </nav>
+</div>
+
+<main>
+  <div class="hero">
+    <h1>Master Data SIMRS — Pasien & Dokter</h1>
+    <p class="muted">Halaman ini menjelaskan bagaimana form mengambil data master pasien dan dokter dari SIMRS, endpoint yang dibutuhkan, cara pemetaan field, serta cara mengonfigurasi dan mengujinya.</p>
+  </div>
+
+  <div class="card">
+    <h2>1. Alur data</h2>
+    <div class="flow">
+      <span class="node">User isi No. RM</span><span class="arrow">→</span>
+      <span class="node">Tekan Enter</span><span class="arrow">→</span>
+      <span class="node">fetchPasien(rm)</span><span class="arrow">→</span>
+      <span class="node">GET SIMRS</span><span class="arrow">→</span>
+      <span class="node">mapPasien()</span><span class="arrow">→</span>
+      <span class="node">Form terisi otomatis</span>
+    </div>
+    <ul class="tight">
+      <li><b>Pasien:</b> field yang terisi otomatis = nama, No. Registrasi, tanggal lahir, jenis kelamin, alamat, no. telepon, penjamin, DPJP masuk, ruang, kelas.</li>
+      <li><b>Dokter:</b> daftar nama dokter diambil terpisah dan dipakai mengisi <code>&lt;datalist&gt;</code> pada kolom DPJP Masuk / Nama DPJP Jantung.</li>
+      <li><b>Umur</b> dihitung otomatis dari tanggal lahir terhadap tanggal tindakan.</li>
+      <li>Setiap pengambilan dicatat di audit trail (<code>S.audit</code>) sebagai bukti sumber data.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>2. Konfigurasi endpoint</h2>
+    <p>Edit blok <code>SIMRS_CONFIG</code> di <code>form-input-lengkap.html</code>, atau isi lewat browser tanpa mengubah file:</p>
+<pre><span class="c">// di console browser</span>
+localStorage.setItem('cathlab:simrs', JSON.stringify({
+  BASE_URL: <span class="s">'https://simrs.example.go.id/api/rest'</span>,
+  TOKEN:    <span class="s">'TOKEN_ANDA'</span>,
+  TIMEOUT_MS: <span class="s">8000</span>
+}));</pre>
+    <div class="env">
+      <b>Mode offline:</b> bila <code>BASE_URL</code> kosong, form memakai data lokal
+      (<code>PASIEN_DB</code> / <code>DOKTER_DB</code>) sehingga tetap bisa dipakai untuk demo
+      tanpa koneksi. Ini perilaku bawaan di GitHub Pages.
+    </div>
+    <h3>Endpoint yang dibutuhkan</h3>
+    <div class="tw"><table>
+      <thead><tr><th>Kebutuhan</th><th>Path</th><th>Contoh</th><th>Dipakai oleh</th></tr></thead>
+      <tbody>
+        <tr><td>Master pasien</td><td><code>MASTER/pasien/{no_rm}</code></td><td><code>/api/rest/MASTER/pasien/00051563</code></td><td><code>fetchPasien()</code></td></tr>
+        <tr><td>Master dokter</td><td><code>MASTER/dokter</code></td><td><code>/api/rest/MASTER/dokter</code></td><td><code>fetchDokter()</code></td></tr>
+      </tbody>
+    </table></div>
+    <h3>Contoh respons pasien</h3>
+<pre>{
+  <span class="k">"no_rm"</span>: <span class="s">"00051563"</span>,
+  <span class="k">"no_registrasi"</span>: <span class="s">"2609030130"</span>,
+  <span class="k">"nama_lengkap"</span>: <span class="s">"DARMAWAN"</span>,
+  <span class="k">"tgl_lahir"</span>: <span class="s">"1982-07-01"</span>,
+  <span class="k">"jk"</span>: <span class="s">"Laki-laki"</span>,
+  <span class="k">"alamat"</span>: <span class="s">"Jl. Merdeka No. 45, Jambi"</span>,
+  <span class="k">"no_telepon"</span>: <span class="s">"0812-3456-7890"</span>,
+  <span class="k">"penjamin"</span>: <span class="s">"BPJS Kesehatan"</span>,
+  <span class="k">"dpjp_masuk"</span>: <span class="s">"dr. Puspita Sari Bustanul, Sp.JP"</span>,
+  <span class="k">"ruang"</span>: <span class="s">"Cathlab 1"</span>,
+  <span class="k">"kelas"</span>: <span class="s">"VIP"</span>
+}</pre>
+    <p class="small muted">Respons dibungkus <code>data</code> atau <code>result</code> juga diterima otomatis.</p>
+  </div>
+
+  <div class="card">
+    <h2>3. Pemetaan field</h2>
+    <p>Kalau nama kolom SIMRS berbeda, ubah satu objek ini saja:</p>
+<pre><span class="k">const</span> FIELD_MAP = {
+  nama:     <span class="s">'nama_lengkap'</span>,   <span class="c">// → field form</span>
+  reg:      <span class="s">'no_registrasi'</span>,
+  lahir:    <span class="s">'tgl_lahir'</span>,
+  jk:       <span class="s">'jk'</span>,
+  alamat:   <span class="s">'alamat'</span>,
+  telp:     <span class="s">'no_telepon'</span>,
+  penjamin: <span class="s">'penjamin'</span>,
+  dpjpMasuk:<span class="s">'dpjp_masuk'</span>,
+  ruang:    <span class="s">'ruang'</span>,
+  kelas:    <span class="s">'kelas'</span>
+};</pre>
+    <h3>Normalisasi otomatis</h3>
+    <ul class="tight">
+      <li><b>Telepon:</b> tanda hubung/spasi dibuang → <code>0812-3456-7890</code> menjadi <code>081234567890</code> agar lolos pola validasi.</li>
+      <li><b>Tanggal lahir:</b> bila format bukan <code>YYYY-MM-DD</code>, dikonversi ke ISO.</li>
+      <li>Kolom yang tidak dikirim SIMRS dibiarkan kosong — tidak menimpa isian pengguna.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>4. Autentikasi &amp; timeout</h2>
+    <ul class="tight">
+      <li>Bila <code>TOKEN</code> diisi, permintaan dikirim dengan header <code>Authorization: Bearer &lt;token&gt;</code>.</li>
+      <li>Semua request memakai <code>AbortController</code> dengan batas <code>TIMEOUT_MS</code> (default 8 detik) agar form tidak menggantung.</li>
+      <li>Kegagalan koneksi tidak menghentikan form: form jatuh ke data lokal dan menampilkan toast.</li>
+      <li><b>Rekomendasi:</b> jangan menaruh token API di kode publik. Untuk produksi, arahkan ke proxy/backend yang menambah header server-side, atau pakai token sesi berumur pendek.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>5. Menguji koneksi</h2>
+    <p>Di bagian <b>Identitas Pasien</b> terdapat tombol <b>Uji koneksi</b>:</p>
+    <ul class="tight">
+      <li><b>Offline</b> (BASE_URL kosong) → menampilkan keterangan mode offline.</li>
+      <li><b>Terhubung</b> → menampilkan jumlah dokter yang berhasil diambil.</li>
+      <li><b>Gagal / timeout</b> → menampilkan pesan error dari server atau batas waktu.</li>
+    </ul>
+    <h3>Periksa manual dari console</h3>
+<pre><span class="k">await</span> fetchPasien(<span class="s">'00051563'</span>)   <span class="c">// data pasien</span>
+<span class="k">await</span> fetchDokter()                <span class="c">// daftar dokter</span></pre>
+  </div>
+
+  <div class="card">
+    <h2>6. Catatan keamanan &amp; privasi</h2>
+    <ul class="tight">
+      <li>Data master hanya dibaca; form tidak pernah menulis ke SIMRS.</li>
+      <li>Data pasien disimpan di <code>localStorage</code> browser, bukan dikirim ke server mana pun.</li>
+      <li>Jangan menambah kolom sensitif (mis. diagnosis HIV, NAPK) ke <code>PASIEN_DB</code> yang ikut ter-commit ke repo publik.</li>
+      <li>Riwayat versi (<code>Riwayat</code>) juga menyimpan snapshot lokal di peramban yang sama.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>7. Isi otomatis di form</h2>
+    <div class="tw"><table>
+      <thead><tr><th>Field form</th><th>Sumber</th><th>Cara isi</th></tr></thead>
+      <tbody>
+        <tr><td>No. RM</td><td>Diketik user</td><td>Tekan Enter untuk memicu pengambilan</td></tr>
+        <tr><td>Nama Lengkap</td><td>SIMRS <code>nama_lengkap</code></td><td>Readonly</td></tr>
+        <tr><td>No. Registrasi</td><td>SIMRS <code>no_registrasi</code></td><td>Readonly</td></tr>
+        <tr><td>Tanggal Lahir</td><td>SIMRS <code>tgl_lahir</code></td><td>Date input</td></tr>
+        <tr><td>Umur</td><td>Dihitung dari tgl lahir</td><td>Otomatis, readonly</td></tr>
+        <tr><td>Jenis Kelamin</td><td>SIMRS <code>jk</code></td><td>Select</td></tr>
+        <tr><td>Alamat</td><td>SIMRS <code>alamat</code></td><td>Readonly</td></tr>
+        <tr><td>No. Telepon</td><td>SIMRS <code>no_telepon</code> (dinormalisasi)</td><td>Readonly</td></tr>
+        <tr><td>Penjamin</td><td>SIMRS <code>penjamin</code></td><td>Select</td></tr>
+        <tr><td>DPJP Masuk</td><td>SIMRS <code>dpjp_masuk</code></td><td>Datalist master dokter</td></tr>
+        <tr><td>Ruang / Cathlab</td><td>SIMRS <code>ruang</code></td><td>Text</td></tr>
+        <tr><td>Kelas</td><td>SIMRS <code>kelas</code></td><td>Select</td></tr>
+        <tr><td>Barcode laporan</td><td>Dihitung dari No. RM + tanggal</td><td>Otomatis, dapat diubah</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <h2>8. Ringkasan endpoint</h2>
+    <pre>GET  {BASE_URL}/MASTER/pasien/{no_rm}
+  → { nama_lengkap, no_registrasi, tgl_lahir, jk, alamat,
+      no_telepon, penjamin, dpjp_masuk, ruang, kelas }
+
+GET  {BASE_URL}/MASTER/dokter
+  → [ { nama_lengkap }, … ]   (atau array string)</pre>
+  </div>
+</main>
+
+<div id="toast"></div>
+</body>
+</html>
