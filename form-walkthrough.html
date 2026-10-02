@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Step-by-Step Walkthrough — Form Cathlab</title>
+<link rel="stylesheet" href="css/docs.css">
+<link rel="stylesheet" href="css/lib/driver.css">
+<style>
+.whead { margin-bottom: 12px; }
+.wbar { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+.dot {
+  width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--ln);
+  background: #fff; color: var(--mu); display: inline-flex; align-items: center;
+  justify-content: center; font-size: 12.5px; font-weight: 700; cursor: pointer;
+}
+.dot.on { background: var(--ac); border-color: var(--ac); color: #fff; }
+.dot.ok { background: var(--ok); border-color: var(--ok); color: #fff; }
+.dot.err { background: var(--err); border-color: var(--err); color: #fff; }
+.wbar .sep { flex: 1; height: 2px; background: var(--ln); min-width: 20px; }
+.wbar .wbar-txt { font-size: 12.5px; color: var(--mu); width: 100%; margin-top: 6px; }
+
+.steps-grid { display: grid; grid-template-columns: 1fr 260px; gap: 14px; align-items: start; }
+@media (max-width: 900px) { .steps-grid { grid-template-columns: 1fr; } }
+
+.field { margin-bottom: 12px; }
+.field label { display: block; font-size: 12px; color: var(--mu); margin-bottom: 4px; font-weight: 600; }
+.field input, .field select, .field textarea {
+  width: 100%; padding: 8px 10px; border: 1px solid #bcc7d0; border-radius: 6px;
+  font: inherit; background: #fff;
+}
+.field textarea { min-height: 70px; resize: vertical; }
+.field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid var(--ac); outline-offset: -1px; }
+.field.bad input, .field.bad select, .field.bad textarea { border-color: var(--err); background: #fef2f2; }
+.field.good input, .field.good select, .field.good textarea { border-color: var(--ok); }
+.emsg { font-size: 12px; color: var(--err); margin-top: 4px; min-height: 15px; }
+.emsg.ok { color: var(--ok); }
+.fmeta { font-size: 11.5px; color: var(--mu); margin-top: 3px; }
+.fmeta code { font-size: 11px; }
+
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chips button {
+  font: inherit; font-size: 12px; padding: 5px 11px; border: 1px solid var(--ln);
+  border-radius: 14px; background: #fff; cursor: pointer;
+}
+.chips button.on { background: var(--ac); border-color: var(--ac); color: #fff; font-weight: 600; }
+
+.aside { position: sticky; top: 62px; }
+.aside .ex-box { background: #f0fdfa; border: 1px dashed var(--ac2); border-radius: 8px; padding: 8px 10px; font-size: 12px; }
+.aside .ex-box b { color: var(--ac); }
+.summary td:first-child { width: 170px; font-weight: 600; color: var(--mu); }
+.steps-btns { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<div class="dbar">
+  <div class="t">Cathlab Docs · Step-by-Step Walkthrough</div>
+  <nav>
+    <a href="form-guide.html">Interactive Guide</a>
+    <a href="form-docs.html">Dokumentasi Form</a>
+    <a href="index.html">← Halaman Depan</a>
+  </nav>
+</div>
+
+<main>
+  <div class="page-head whead">
+    <h1>Step-by-Step Form Walkthrough</h1>
+    <p>Isi form Cathlab bertahap. Setiap step divalidasi sebelum boleh lanjut; progres tersimpan otomatis di browser ini.</p>
+    <p style="margin-top:8px"><button class="btn" id="btnTour" type="button">❔ Panduan cepat (Driver.js)</button></p>
+  </div>
+
+  <div class="wbar" id="wbar"></div>
+
+  <div class="steps-grid">
+    <section class="card" id="panel"></section>
+    <aside class="card aside" id="aside"></aside>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script src="js/docs-common.js"></script>
+<script src="js/form-schema.js"></script>
+<script src="js/lib/driver.iife.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = Docs.$, esc = Docs.esc;
+  var LS = 'cathlab:walkthrough:v1';
+
+  /* ---------------- langkah walkthrough ---------------- */
+  var STEPS = [
+    {
+      id: 1, title: 'Identitas Pasien', goal: 'Kunci seluruh laporan: No. RM, nama, dan tanggal tindakan.',
+      keys: ['rm', 'nama', 'reg', 'lahir', 'jk', 'penjamin', 'dpjpMasuk', 'telp', 'dpjp']
+    },
+    {
+      id: 2, title: 'Jadwal & Jenis Tindakan', goal: 'Tentukan kapan tindakan dilakukan dan jenis pemeriksaan (menentukan jumlah diagram).',
+      keys: ['tgl', 'mulai', 'selesai', 'anestesi', 'kelas', 'ruang', 'jenis', 'labelPre', 'labelPost', 'tglMasuk', 'tglSelesai', 'masuk']
+    },
+    {
+      id: 3, title: 'Diagnosis, Tim & Akses', goal: 'Tulis indikasi, lengkapi tim operator, dan catat lokasi akses puncture.',
+      keys: ['pre', 'diagnosaPre', 'post', 'indikasi', 'killip', 'ccs', 'alergi', 'keluhan',
+        'op', 'operator', 'operator2', 'fellow', 'resident', 'asisten', 'perawat', 'kolim', 'monitoring', 'akses', 'aksesTbl', 'sheath', 'kat_diag', 'kat_guide']
+    },
+    {
+      id: 4, title: 'Pemeriksaan Penunjang & Vital', goal: 'Dokumentasikan hasil lab/EKG/echo serta hemodinamik selama tindakan.',
+      keys: ['consent', 'puasa', 'premedikasi', 'profilaksis', 'labHb', 'labPlt', 'labINR', 'labKreat', 'labGDS',
+        'labTrop', 'egk', 'echo', 'thorax', 'td', 'hr', 'rr', 'suhu', 'spo2', 'urine', 'dom', 'timiPre', 'timiPost', 'obatRutin', 'riwayat']
+    },
+    {
+      id: 5, title: 'Kontras, Obat & Stent', goal: 'Catat volume kontras, radiasi, obat yang diberikan, dan registry stent.',
+      keys: ['kontras', 'kontras_vol', 'kontrasVol', 'radiasi', 'darah', 'hep', 'ntg', 'medsTbl', 'stent', 'diagram']
+    },
+    {
+      id: 6, title: 'Komplikasi & Hasil', goal: 'Nilai komplikasi, tulis narasi/kesimpulan, dan rencana pulang.',
+      keys: ['komplikasi', 'komplikasiList', 'komplikasiCatatan', 'disposisi', 'followUp', 'obatPulang', 'edukasi',
+        'narasi', 'kesimpulan']
+    },
+    {
+      id: 7, title: 'Tembusan & Tanda Tangan', goal: 'Tentukan distribusi laporan dan isi nama penanda tangan.',
+      keys: ['ttd_tgl', 'ttdTgl', 'ttd_nama', 'ttdNama', 'ttdf', 'tem']
+    }
+  ];
+
+  var state = { step: 0, data: {}, touched: {}, tried: {}, submitted: false };
+
+  /* ---------------- persistence ---------------- */
+  function load() {
+    try {
+      var raw = localStorage.getItem(LS);
+      if (raw) {
+        var p = JSON.parse(raw);
+        state.data = p.data || {};
+        state.step = Math.min(Math.max(0, p.step | 0), STEPS.length - 1);
+        state.touched = p.touched || {};
+        state.tried = p.tried || {};
+      }
+    } catch (e) { state.data = {}; }
+  }
+  function save() {
+    try { localStorage.setItem(LS, JSON.stringify({ step: state.step, data: state.data, touched: state.touched, tried: state.tried })); }
+    catch (e) { Docs.toast('Penyimpanan browser penuh — progres mungkin tidak tersimpan.', 'err'); }
+  }
+
+  /* ---------------- schema lookup ---------------- */
+  function findField(key) {
+    var hit = CathlabSchema.fieldByKey(key);
+    return hit ? hit.field : null;
+  }
+  function fieldsOf(step) {
+    return step.keys.map(findField).filter(Boolean);
+  }
+
+  function uniq(arr) {
+    var seen = {}, out = [];
+    arr.forEach(function (x) { if (!seen[x]) { seen[x] = 1; out.push(x); } });
+    return out.join(', ');
+  }
+
+  /* ---------------- validasi ---------------- */
+  function getVal(key) { return state.data[key] == null ? '' : state.data[key]; }
+
+  function validate(key) {
+    var f = findField(key);
+    if (!f) return { ok: true };
+    var v = getVal(key);
+    if ((v === '' || v == null) && !state.touched[key]) return { ok: true, idle: true }; // belum disentuh → belum digurui
+    var res = CathlabSchema.validate(f, v);
+    return res;
+  }
+  function stepStatus(i) {
+    var req = fieldsOf(STEPS[i]).filter(function (f) { return f.required; });
+    var missing = req.filter(function (f) { return String(getVal(f.k) || '').trim() === ''; });
+    return { total: req.length, missing: missing, done: missing.length === 0 };
+  }
+
+  /* ---------------- render ---------------- */
+  function renderBar() {
+    var html = '';
+    STEPS.forEach(function (s, i) {
+      if (i > 0) html += '<span class="sep"></span>';
+      var st = stepStatus(i);
+      var cls = 'dot' + (i === state.step ? ' on' : (st.done ? ' ok' : ((st.missing.length && state.tried[i]) ? ' err' : '')));
+      html += '<button class="' + cls + '" type="button" data-go="' + i + '" title="' + esc(s.title) + '">' + (s.id) + '</button>';
+    });
+    var st = stepStatus(state.step);
+    html += '<div class="wbar-txt">Step ' + STEPS[state.step].id + ' dari ' + STEPS.length +
+      ' · Field wajib terisi: ' + (st.total - st.missing.length) + '/' + st.total +
+      (st.missing.length ? ' · belum: ' + uniq(st.missing.map(function (f) { return f.label.replace(/\s*\*$/, ''); })) : ' ✓') + '</div>';
+    $('#wbar').innerHTML = html;
+  }
+
+  function inputFor(f) {
+    var k = f.k, v = getVal(k), name = 'w_' + k;
+    if (f.type === 'select') {
+      return '<select id="' + name + '"><option value="">— pilih —</option>' +
+        (f.options || []).map(function (o) {
+          return '<option value="' + esc(o) + '"' + (v === o ? ' selected' : '') + '>' + esc(o === '' ? '(kosong)' : o) + '</option>';
+        }).join('') + '</select>';
+    }
+    if (f.type === 'textarea') {
+      return '<textarea id="' + name + '" rows="3">' + esc(v) + '</textarea>';
+    }
+    if (f.type === 'choice' || f.type === 'chips') {
+      var opts = f.options || [];
+      return '<div class="chips" data-chips="' + esc(k) + '">' +
+        opts.map(function (o) {
+          var on = (f.type === 'chips')
+            ? (v ? v.split('|').indexOf(o) >= 0 : (f.default || '').split(',').map(function (s) { return s.trim(); }).indexOf(o) >= 0)
+            : (v === o);
+          return '<button type="button" class="' + (on ? 'on' : '') + '" data-v="' + esc(o) + '">' + esc(o) + '</button>';
+        }).join('') + '</div><input type="hidden" id="' + name + '" value="' + esc(Array.isArray(v) ? v.join('|') : v) + '">';
+    }
+    var type = f.type === 'number' ? 'text' : (f.type === 'date' ? 'date' : (f.type === 'time' ? 'time' : 'text'));
+    var ph = f.example ? String(f.example).slice(0, 40) : '';
+    return '<input id="' + name + '" type="' + type + '" value="' + esc(v) + '" placeholder="' + esc(ph) + '"' +
+      (f.max != null && f.type === 'text' ? ' maxlength="' + f.max + '"' : '') + '>';
+  }
+
+  function fieldHtml(f) {
+    var res = validate(f.k);
+    var cls = 'field' + (res.ok ? (res.idle ? '' : ' good') : ' bad');
+    var msg = res.idle ? '' :
+      (res.ok ? '<span class="emsg ok">✓ Valid</span>' : '<span class="emsg">✕ ' + esc(res.msg) + '</span>');
+    var spec = [];
+    if (f.type) spec.push('tipe <code>' + esc(f.type) + '</code>');
+    if (f.min != null) spec.push('min <code>' + f.min + '</code>');
+    if (f.max != null) spec.push('maks <code>' + f.max + '</code>');
+    if (f.pattern) spec.push('pola <code>' + esc(f.pattern) + '</code>');
+
+    return '<div class="' + cls + '" data-k="' + esc(f.k) + '">' +
+      '<label for="w_' + esc(f.k) + '">' + esc(f.label) +
+      (f.required ? ' <span class="tag tag-req">Wajib</span>' : '') +
+      (f.auto ? ' <span class="tag tag-auto">Auto</span>' : '') + '</label>' +
+      inputFor(f) +
+      '<div class="fmeta">' + spec.join(' · ') +
+      (f.example ? ' · contoh: <code>' + esc(f.example) + '</code>' : '') + '</div>' +
+      msg + '</div>';
+  }
+
+  function asideHtml(step) {
+    var fs = fieldsOf(step);
+    var examples = fs.filter(function (f) { return f.example; }).slice(0, 8);
+    return '<h2 style="font-size:15px">Panduan Step ' + step.id + '</h2>' +
+      '<p class="hint">' + esc(step.goal) + '</p>' +
+      (examples.length ? '<div class="ex-box"><b>Contoh data step ini</b><ul class="tight" style="margin:6px 0 0">' +
+        examples.map(function (f) { return '<li><code>' + esc(f.k) + '</code>: <code>' + esc(f.example) + '</code></li>'; }).join('') +
+        '</ul></div>' : '') +
+      '<div class="callout" style="margin-top:10px"><b>Aturan lanjut:</b> semua field bertanda <span class="tag tag-req">Wajib</span> pada step ini harus terisi dan valid sebelum menekan "Berikutnya".</div>' +
+      (fs.some(function (f) { return f.tips; })
+        ? '<h3>Tips pengisian</h3><ul class="tight">' + fs.filter(function (f) { return f.tips; })
+          .map(function (f) { return '<li><b>' + esc(f.label.replace(/\s*\*$/, '')) + ':</b> ' + esc(f.tips) + '</li>'; }).join('') + '</ul>'
+        : '') +
+      '<div class="callout warn" style="margin-top:8px"><b>⚠</b> Tabel interaktif (akses, vital, obat, stent, diagram) tidak bisa diisi di halaman ini — buka form aslinya saat chegou step terkait.</div>';
+  }
+
+  function render() {
+    var step = STEPS[state.step];
+    var fs = fieldsOf(step);
+    $('#panel').innerHTML =
+      '<h2 style="font-size:17px">Step ' + step.id + ' · ' + esc(step.title) + '</h2>' +
+      '<p class="hint">' + esc(step.goal) + '</p>' +
+      (fs.length ? fs.map(fieldHtml).join('') : '<p class="muted">Tidak ada field yang relevan pada step ini.</p>') +
+      '<div class="steps-btns">' +
+      '<button class="btn" id="prev" type="button"' + (state.step === 0 ? ' disabled' : '') + '>← Sebelumnya</button>' +
+      '<button class="btn" id="next" type="button" class="btn-ac">Berikutnya →</button>' +
+      '<button class="btn" id="fill" type="button">Isi contoh otomatis</button>' +
+      '<button class="btn" id="clearStep" type="button">Kosongkan step</button>' +
+      (state.step === STEPS.length - 1 ? '<button class="btn btn-ac" id="submit" type="button">Submit &amp; Ringkasan ✓</button>' : '') +
+      '</div>';
+    $('#aside').innerHTML = asideHtml(step);
+    renderBar();
+  }
+
+  function renderSummary() {
+    var rows = '';
+    STEPS.forEach(function (s) {
+      var st = stepStatus(s.idx = STEPS.indexOf(s));
+      rows += '<tr><td>' + s.id + '. ' + esc(s.title) + '</td><td>' +
+        (st.done ? '<span class="tag tag-opt" style="background:#d1fae5;color:#065f46">Lengkap</span>' :
+          '<span class="tag tag-req">' + st.missing.length + ' field wajib belum</span>') + '</td></tr>';
+    });
+    var filled = Object.keys(state.data).filter(function (k) { return String(state.data[k]).trim() !== ''; });
+    $('#panel').innerHTML =
+      '<h2 style="font-size:17px">Ringkasan Pengisian</h2>' +
+      '<p class="hint">Data tersimpan di browser ini (localStorage). Salin ke form aslinya atau buka form untuk mengisi bagian interaktif.</p>' +
+      '<div class="tw"><table class="summary"><thead><tr><th>Step</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '<h3>Ringkasan nilai (' + filled.length + ' field terisi)</h3>' +
+      '<div class="tw"><table class="summary"><tbody>' +
+      (filled.length ? filled.map(function (k) {
+        var f = findField(k);
+        return '<tr><td><code>' + esc(k) + '</code>' + (f ? ' — ' + esc(f.label.replace(/\s*\*$/, '')) : '') + '</td><td>' +
+          esc(String(state.data[k]).slice(0, 160)) + '</td></tr>';
+      }).join('') : '<tr><td colspan="2" class="muted">Belum ada data.</td></tr>') +
+      '</tbody></table></div>' +
+      '<h3>Data siap disalin (JSON)</h3>' +
+      '<textarea rows="8" style="width:100%;font-family:Consolas,monospace;font-size:12px">' + esc(JSON.stringify(state.data, null, 2)) + '</textarea>' +
+      '<div class="steps-btns">' +
+      '<button class="btn" id="copy" type="button">Salin JSON</button>' +
+      '<button class="btn" id="export" type="button">Unduh .json</button>' +
+      '<button class="btn btn-ac" id="restart" type="button">Mulai ulang</button>' +
+      '<a class="btn btn-ac" id="goForm" href="form-input-lengkap.html">Buka Form Lengkap</a>' +
+      '<a class="btn" id="goFormS" href="form-input-simple.html">Buka Form Simple</a>' +
+      '</div>';
+    renderBar();
+    Docs.toast('Walkthrough selesai. Periksa bagian yang belum lengkap.', 'ok');
+  }
+
+  /* ---------------- aksi ---------------- */
+  function readEl(el) {
+    if (!el) return '';
+    if (el.type === 'hidden') return el.value;
+    return el.value;
+  }
+  function refreshField(k) {
+    var res = validate(k);
+    var wrap = $('#panel .field[data-k="' + k + '"]');
+    if (!wrap) return;
+    wrap.className = 'field' + (res.ok ? (res.idle ? '' : ' good') : ' bad');
+    var msg = res.idle ? '' : (res.ok ? '<span class="emsg ok">✓ Valid</span>' : '<span class="emsg">✕ ' + esc(res.msg) + '</span>');
+    var old = wrap.querySelector('.emsg');
+    if (old) old.outerHTML = msg; else wrap.insertAdjacentHTML('beforeend', msg);
+    renderBar();
+  }
+
+  function canAdvance() {
+    var step = STEPS[state.step];
+    var bad = [];
+    state.tried[state.step] = true;
+    fieldsOf(step).forEach(function (f) {
+      state.touched[f.k] = true;
+      var res = validate(f.k);
+      if (!res.ok) bad.push(f);
+    });
+    // render ulang untuk memunculkan pesan error
+    render();
+    if (bad.length) {
+      var first = $('.field.bad');
+      if (first) first.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      Docs.toast(bad.length + ' field belum valid: ' + uniq(bad.map(function (f) { return f.label.replace(/\s*\*$/, ''); })), 'err');
+      return false;
+    }
+    return true;
+  }
+
+  function fillExample() {
+    var step = STEPS[state.step];
+    fieldsOf(step).forEach(function (f) {
+      if (!f.example) return;
+      state.data[f.k] = f.example;
+      state.touched[f.k] = true;
+    });
+    state.tried[state.step] = true;
+    save(); render();
+    Docs.toast('Contoh data step ini diisi.', 'ok');
+  }
+
+  function bindPanel() {
+    $('#panel').addEventListener('input', Docs.guard(function (e) {
+      var wrap = e.target.closest('.field'); if (!wrap) return;
+      var k = wrap.dataset.k;
+      state.data[k] = readEl(e.target);
+      state.touched[k] = true;
+      refreshField(k);
+      save();
+    }, 'input walkthrough'));
+
+    $('#panel').addEventListener('change', Docs.guard(function (e) {
+      var wrap = e.target.closest('.field'); if (!wrap) return;
+      state.data[wrap.dataset.k] = readEl(e.target);
+      state.touched[wrap.dataset.k] = true;
+      refreshField(wrap.dataset.k); save();
+    }, 'change walkthrough'));
+
+    $('#panel').addEventListener('click', Docs.guard(function (e) {
+      var chip = e.target.closest('.chips button');
+      if (chip) {
+        var wrap = chip.closest('.field');
+        var box = chip.closest('.chips');
+        var k = box.dataset.chips;
+        var f = findField(k) || {};
+        var mult = (f.type === 'chips');
+        if (mult) {
+          chip.classList.toggle('on');
+          var vals = Docs.$$('.chips button.on', box).map(function (b) { return b.dataset.v; });
+          var hid = box.parentNode.querySelector('input[type=hidden]');
+          if (hid) hid.value = vals.join('|');
+          state.data[k] = vals.join('|');
+        } else {
+          Docs.$$('button', box).forEach(function (b) { b.classList.toggle('on', b === chip); });
+          var hid2 = box.parentNode.querySelector('input[type=hidden]');
+          if (hid2) hid2.value = chip.dataset.v;
+          state.data[k] = chip.dataset.v;
+        }
+        state.touched[k] = true;
+        refreshField(k); save();
+        return;
+      }
+      var a = e.target.closest('button'); if (!a) return;
+      if (a.id === 'prev') { if (state.step > 0) { state.step--; save(); render(); scrollTo({ top: 0, behavior: 'smooth' }); } }
+      if (a.id === 'next') { if (canAdvance()) { if (state.step < STEPS.length - 1) { state.step++; save(); render(); scrollTo({ top: 0, behavior: 'smooth' }); } else renderSummary(); } }
+      if (a.id === 'fill') fillExample();
+      if (a.id === 'clearStep') {
+        fieldsOf(STEPS[state.step]).forEach(function (f) { delete state.data[f.k]; delete state.touched[f.k]; });
+        save(); render(); Docs.toast('Step dikosongkan.', '');
+      }
+      if (a.id === 'submit') { if (canAdvance()) renderSummary(); }
+      if (a.id === 'copy') {
+        var ta = $('#panel textarea');
+        if (!ta) return;
+        ta.select();
+        try {
+          if (navigator.clipboard) navigator.clipboard.writeText(ta.value).then(function () { Docs.toast('JSON disalin.', 'ok'); });
+          else { document.execCommand('copy'); Docs.toast('JSON disalin.', 'ok'); }
+        } catch (err) { Docs.toast('Copy gagal — blok teks dan salin manual.', 'err'); }
+      }
+      if (a.id === 'export') {
+        try {
+          var blob = new Blob([JSON.stringify(state.data, null, 2)], { type: 'application/json' });
+          var url = URL.createObjectURL(blob);
+          var link = document.createElement('a');
+          link.href = url; link.download = 'cathlab_walkthrough.json'; link.click();
+          URL.revokeObjectURL(url);
+          Docs.toast('File JSON diunduh.', 'ok');
+        } catch (err) { Docs.toast('Unduh gagal.', 'err'); }
+      }
+      if (a.id === 'restart') { state = { step: 0, data: {}, touched: {}, tried: {}, submitted: false }; save(); render(); scrollTo({ top: 0, behavior: 'smooth' }); }
+    }, 'tombol walkthrough'));
+  }
+
+  $('#wbar').addEventListener('click', Docs.guard(function (e) {
+    var b = e.target.closest('[data-go]'); if (!b) return;
+    var target = +b.dataset.go;
+    if (target > state.step) {
+      // boleh lompat maju hanya bila step saat ini valid
+      while (state.step < target) {
+        if (!canAdvance()) return;
+        state.step++;
+      }
+      save(); render(); scrollTo({ top: 0, behavior: 'smooth' });
+    } else { state.step = target; save(); render(); }
+  }, 'navigasi step'));
+
+  /* ================= TOUR PANDUAN (Driver.js) ================= */
+  var tourDone = false;
+  try { tourDone = localStorage.getItem('cathlab:walkthrough:tour') === '1'; } catch (e) { tourDone = false; }
+
+  function startTour(from) {
+    var factory = (window.driver && window.driver.js && window.driver.js.driver) || null;
+    if (!factory) { Docs.toast('Driver.js belum termuat.', 'err'); return; }
+
+    var t = factory({
+      allowClose: true,
+      smoothScroll: true,
+      animate: true,
+      duration: 280,
+      overlayColor: '#0f1e2b',
+      overlayOpacity: 0.55,
+      showProgress: true,
+      progressText: 'Langkah {{current}} / {{total}}',
+      showButtons: ['previous', 'next', 'close'],
+      nextBtnText: 'Lanjut →',
+      prevBtnText: '← Kembali',
+      doneBtnText: 'Mulai isi ✓',
+      onDestroyed: function () { try { localStorage.setItem('cathlab:walkthrough:tour', '1'); } catch (e) { } }
+    });
+
+    t.setSteps([
+      {
+        element: '#wbar',
+        popover: {
+          title: 'Progress step',
+          description: 'Tujuh lingkaran di atas menunjukkan posisi pengisian. <b>Hijau</b> = step lengkap, <b>merah</b> = ada field wajib belum valid (muncul setelah Anda mencoba melanjutkan). Klik lingkaran untuk melompat — lompatan hanya diizinkan bila step sebelumnya sudah valid.'
+        }
+      },
+      {
+        element: '#panel .field',
+        popover: {
+          title: 'Field pada step ini',
+          description: 'Kolom input untuk step aktif. Validasi real-time: border <b>hijau</b> + "✓ Valid" bila benar, border <b>merah</b> + pesan galat bila salah.'
+        }
+      },
+      {
+        element: '#panel .steps-btns',
+        popover: {
+          title: 'Kontrol langkah',
+          description: '<b>Berikutnya</b> hanya boleh ditekan bila seluruh field wajib pada step ini valid. <b>Isi contoh otomatis</b> mengisi data contoh agar Anda melihat bentuk isian yang benar.'
+        }
+      },
+      {
+        element: '#aside',
+        popover: {
+          title: 'Panduan & contoh data',
+          description: 'Ringkasan tujuan step, contoh input, aturan lanjut, dan tips pengisian per field. Ikuti contoh lalu sesuaikan dengan data pasien sebenarnya.'
+        }
+      },
+      {
+        popover: {
+          title: 'Siap mengisi',
+          description: 'Progres tersimpan otomatis di browser ini. Setelah semua step selesai Anda mendapat <b>ringkasan</b> + JSON yang bisa disalin atau diunduh, lalu buka form asli untuk mencetak laporan.'
+        }
+      }
+    ]);
+
+    t.drive(typeof from === 'number' ? from : 0);
+  }
+
+  var btnTour = $('#btnTour');
+  if (btnTour) btnTour.onclick = Docs.guard(function () { startTour(0); }, 'tour walkthrough');
+  if (!tourDone && typeof window.driver !== 'undefined') setTimeout(function () { startTour(0); }, 700);
+
+  load();
+  bindPanel();
+  render();
+  Docs.toast('Progres walkthrough dimuat dari browser.', '');
+})();
+</script>
+</body>
+</html>

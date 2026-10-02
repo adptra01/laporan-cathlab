@@ -1,0 +1,116 @@
+/* =========================================================
+   Dokumentasi Cathlab — shared styles
+   Konsisten dengan form-input-simple / form-input-lengkap
+   ========================================================= */
+:root {
+  --ac: #0f766e;
+  --ac2: #0d9488;
+  --ink: #0f1e2b;
+  --mu: #5b6b7a;
+  --ln: #d6dde3;
+  --bg: #eef2f4;
+  --ok: #16a34a;
+  --warn: #ea580c;
+  --err: #dc2626;
+  --info: #2563eb;
+  --card: #fff;
+  --card2: #f8fafb;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font: 14px/1.55 "Segoe UI", system-ui, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+/* ---------- topbar ---------- */
+.dbar {
+  position: sticky; top: 0; z-index: 40;
+  background: rgba(255,255,255,.97);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--ln);
+  padding: 8px 18px;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap;
+}
+.dbar .t { font-weight: 700; font-size: 15px; color: var(--ac); }
+.dbar nav { display: flex; gap: 6px; flex-wrap: wrap; }
+.dbar nav a, .btn {
+  font-size: 12.5px; padding: 6px 12px; border: 1px solid var(--ln);
+  border-radius: 6px; background: #fff; color: var(--ink);
+  text-decoration: none; cursor: pointer; font-family: inherit;
+  display: inline-block;
+}
+.dbar nav a:hover, .btn:hover { background: #f5f7f9; }
+.dbar nav a.on { background: var(--ac); border-color: var(--ac); color: #fff; font-weight: 600; }
+.btn-ac { background: var(--ac); border-color: var(--ac); color: #fff; font-weight: 600; }
+.btn-ac:hover { background: var(--ac2); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ---------- layout ---------- */
+main { max-width: 1040px; margin: 16px auto; padding: 0 16px 60px; }
+.page-head { margin-bottom: 16px; }
+.page-head h1 { margin: 0 0 6px; font-size: 22px; }
+.page-head p { margin: 0; color: var(--mu); }
+.card {
+  background: var(--card); border: 1px solid var(--ln);
+  border-radius: 10px; padding: 16px 18px; margin-bottom: 14px;
+}
+.card h2 {
+  margin: 0 0 10px; font-size: 16px; color: var(--ac);
+  display: flex; align-items: center; gap: 8px;
+}
+.card h3 { margin: 14px 0 6px; font-size: 13.5px; color: var(--ac); }
+.card h3:first-child { margin-top: 0; }
+.hint { font-size: 12.5px; color: var(--mu); }
+code, kbd {
+  font-family: Consolas, "SF Mono", monospace; font-size: 12px;
+  background: #f1f5f9; border: 1px solid var(--ln); border-radius: 4px; padding: 0 4px;
+}
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 760px) { .grid2 { grid-template-columns: 1fr; } }
+
+/* ---------- badges ---------- */
+.tag {
+  display: inline-block; font-size: 10.5px; font-weight: 700;
+  padding: 2px 8px; border-radius: 10px; vertical-align: middle;
+}
+.tag-req { background: #fee2e2; color: #991b1b; }
+.tag-opt { background: #e2e8f0; color: #334155; }
+.tag-auto { background: #dbeafe; color: #1e40af; }
+.tag-S { background: #d1fae5; color: #065f46; }
+.tag-L { background: #fef3c7; color: #92400e; }
+
+/* ---------- tabel ---------- */
+.tw { overflow-x: auto; border: 1px solid var(--ln); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 12.5px; background: #fff; }
+th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--ln); vertical-align: top; }
+th { background: #f5f7f9; font-size: 11px; text-transform: uppercase; letter-spacing: .3px; color: var(--mu); }
+tr:last-child td { border-bottom: 0; }
+
+/* ---------- toast ---------- */
+#toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 8px;
+  z-index: 200; display: none; max-width: 92vw; box-shadow: 0 4px 20px #0003;
+}
+#toast.show { display: block; }
+#toast.err { background: var(--err); }
+#toast.ok { background: var(--ok); }
+
+/* ---------- util ---------- */
+.muted { color: var(--mu); }
+.small { font-size: 12px; }
+ul.tight { margin: 6px 0; padding-left: 18px; }
+ul.tight li { margin-bottom: 3px; }
+.callout {
+  border-left: 4px solid var(--ac); background: #f0fdfa;
+  padding: 10px 12px; border-radius: 0 8px 8px 0; margin: 10px 0; font-size: 12.5px;
+}
+.callout.warn { border-color: var(--warn); background: #fffbeb; }
+.callout.err { border-color: var(--err); background: #fef2f2; }
+.kv { display: grid; grid-template-columns: 150px 1fr; gap: 4px 10px; font-size: 12.5px; }
+.kv dt { color: var(--mu); font-weight: 600; }
+.kv dd { margin: 0; }

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Interactive Form Guide — Laporan Cathlab</title>
+<link rel="stylesheet" href="css/docs.css">
+<link rel="stylesheet" href="css/lib/driver.css">
+<style>
+.wrap { display: grid; grid-template-columns: 300px 1fr; gap: 14px; align-items: start; }
+@media (max-width: 900px) { .wrap { grid-template-columns: 1fr; } }
+
+.steps { position: sticky; top: 62px; max-height: calc(100vh - 78px); overflow-y: auto; }
+.steps .grp { font-size: 11px; text-transform: uppercase; letter-spacing: .4px; color: var(--mu); font-weight: 700; margin: 12px 0 4px; }
+.steps button.step {
+  display: block; width: 100%; text-align: left; font-size: 12.5px;
+  padding: 6px 9px; border: 1px solid transparent; border-radius: 6px;
+  background: none; cursor: pointer; color: var(--ink); font-family: inherit;
+}
+.steps button.step:hover { background: #f0fdfa; }
+.steps button.step.on { background: var(--ac); color: #fff; font-weight: 600; }
+.steps button.step.on .n { color: #ccfbf1; }
+.steps button.step.done { border-left: 3px solid var(--ok); }
+.steps button.step .n { display: inline-block; width: 20px; color: var(--mu); font-weight: 700; }
+
+.viewer { background: #fff; border: 1px solid var(--ln); border-radius: 10px; overflow: hidden; }
+.viewer iframe { width: 100%; height: calc(100vh - 230px); min-height: 420px; border: 0; display: block; }
+.viewer .fallback { display: none; padding: 24px; text-align: center; color: var(--mu); }
+.viewer.blocked iframe { display: none; }
+.viewer.blocked .fallback { display: block; }
+
+.tourbar {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 10px 12px; background: var(--card); border: 1px solid var(--ln);
+  border-radius: 10px; margin-bottom: 10px;
+}
+.progress { flex: 1; min-width: 140px; height: 7px; background: #e2e8f0; border-radius: 4px; overflow: hidden; }
+.progress i { display: block; height: 100%; width: 0; background: var(--ac); transition: width .25s; }
+.tinfo { font-size: 12.5px; color: var(--mu); min-width: 96px; }
+.switch { display: flex; gap: 4px; }
+.switch a { font-size: 11.5px; padding: 5px 10px; border: 1px solid var(--ln); border-radius: 14px; text-decoration: none; color: var(--ink); }
+.switch a.on { background: var(--ac); border-color: var(--ac); color: #fff; font-weight: 600; }
+.badge-live { font-size: 11px; padding: 3px 9px; border-radius: 12px; background: #fef3c7; color: #92400e; font-weight: 600; }
+.badge-live.on { background: #d1fae5; color: #065f46; }
+</style>
+</head>
+<body>
+
+<div class="dbar">
+  <div class="t">Cathlab Docs · Interactive Form Guide</div>
+  <nav>
+    <a href="form-docs.html">Dokumentasi Form</a>
+    <a href="form-walkthrough.html">Walkthrough</a>
+    <a href="index.html">← Halaman Depan</a>
+    <a id="linkForm" href="form-input-lengkap.html">Buka Form</a>
+  </nav>
+</div>
+
+<main>
+  <div class="page-head">
+    <h1>Interactive Form Guide</h1>
+    <p>Tur interaktif berbasis <a href="https://driverjs.com/" target="_blank" rel="noopener">Driver.js</a> — highlight otomatis, tooltip kontekstual, validasi real-time, dan navigasi Next / Previous / Skip di atas form asli.</p>
+  </div>
+
+  <div class="tourbar">
+    <div class="switch">
+      <a href="form-guide.html?form=lengkap" id="swL" class="on">Form Lengkap</a>
+      <a href="form-guide.html?form=simple" id="swS">Form Simple</a>
+    </div>
+    <span class="badge-live" id="live">Tour nonaktif</span>
+    <div class="progress"><i id="prog"></i></div>
+    <div class="tinfo" id="tinfo">0 / 0</div>
+    <button class="btn btn-ac" id="btnStart">▶ Mulai Tur</button>
+    <button class="btn" id="btnPrev">← Sebelumnya</button>
+    <button class="btn" id="btnNext">Berikutnya →</button>
+    <button class="btn" id="btnSkip">Lewati</button>
+    <button class="btn" id="btnStop" disabled>Akhiri</button>
+  </div>
+
+  <div class="wrap">
+    <aside class="card steps" id="stepList"></aside>
+
+    <section>
+      <div class="card" id="tourInfo">
+        <h2 id="tiTitle">Panduan</h2>
+        <p class="hint" id="tiDesc">Klik "Mulai Tur" untuk memulai, atau pilih field pada daftar di kiri.</p>
+        <div id="tiBody"></div>
+      </div>
+
+      <div class="viewer" id="viewer">
+        <iframe id="frame" title="Form Cathlab"></iframe>
+        <div class="fallback">
+          <p><b>Preview langsung tidak tersedia.</b></p>
+          <p class="small">Browser memblokir akses ke isi iframe saat halaman dibuka lewat <code>file://</code>.</p>
+          <p class="small">Jalankan lewat server lokal, mis. <code>python3 -m http.server</code> di folder proyek,
+             lalu buka <code>http://localhost:8000/form-guide.html</code>. Daftar field, tooltip, dan error message
+             tetap bisa dibaca di panel kiri tanpa tur.</p>
+          <p class="small"><a id="fallbackLink" href="form-input-lengkap.html">Buka form di tab ini</a></p>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script src="js/docs-common.js"></script>
+<script src="js/form-schema.js"></script>
+<script src="js/lib/driver.iife.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = Docs.$, esc = Docs.esc;
+
+  var form = Docs.formFromQuery();
+  var formCode = (form === 'simple') ? 'S' : 'L';
+  var file = Docs.formFile(form);
+  var frame = $('#frame');
+  var frameCtx = null;        // {doc, win} bila iframe bisa diakses
+  var driverReady = false;    // driver.js sudah termuat di dalam iframe
+  var d = null;               // instance Driver.js
+  var steps = [];
+  var idx = -1;
+  var running = false;
+
+  /* ---------------- selector per field ---------------- */
+  var SEL = {
+    simple: {
+      akses: '#chsAkses', diagram: '#dg', stent: '#st', medsTbl: '#st',
+      komplikasi: '#st', komplikasiList: '#st', komplikasiCatatan: '#st',
+      ttdf: '#ttdf', tem: '#st', vitalTl: '#st'
+    },
+    lengkap: {
+      akses: '#aksesTbl', diagram: '#dg', stent: '#stentTbl',
+      medsTbl: '#medsTbl', komplikasi: '[data-k="komplikasi"]',
+      komplikasiList: '[data-compl]', komplikasiCatatan: '[data-k="komplikasiCatatan"]',
+      ttdf: '#ttdInput', tem: '[data-tem]', vitalTl: '#vitalTl'
+    }
+  };
+  function selectorFor(f) {
+    if (SEL[form] && SEL[form][f.k]) return SEL[form][f.k];
+    return '[data-k="' + f.k + '"]';
+  }
+
+  /* ---------------- langkah dari schema ---------------- */
+  function buildSteps() {
+    steps = [];
+    CathlabSchema.SECTIONS.forEach(function (sec) {
+      sec.fields.forEach(function (f) {
+        if (!f.f || f.f.indexOf(formCode) < 0) return;
+        steps.push({ section: sec, field: f, sel: selectorFor(f), title: f.label.replace(/\s*\*$/, '') });
+      });
+    });
+  }
+
+  function renderStepList() {
+    var html = '', lastSec = null;
+    steps.forEach(function (s, i) {
+      if (s.section.id !== lastSec) {
+        html += '<div class="grp">' + esc(s.section.title) + '</div>';
+        lastSec = s.section.id;
+      }
+      html += '<button class="step" type="button" data-i="' + i + '">' +
+        '<span class="n">' + (i + 1) + '.</span> ' + esc(s.title) + '</button>';
+    });
+    $('#stepList').innerHTML = html;
+  }
+
+  /* ---------------- muat Driver.js ke dalam iframe ---------------- */
+  function loadDriver() {
+    return new Promise(function (resolve) {
+      if (!frameCtx) return resolve(false);
+      var win = frameCtx.win, doc = frameCtx.doc;
+      if (win.driver && win.driver.js && win.driver.js.driver) return resolve(true);
+
+      var link = doc.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'css/lib/driver.css';
+      doc.head.appendChild(link);
+
+      // gaya popover khusus Cathlab (di-inject ke iframe)
+      var style = doc.createElement('style');
+      style.textContent =
+        '.driver-popover{border-radius:10px;border:1px solid #d6dde3;box-shadow:0 10px 30px rgba(15,30,43,.22);' +
+        'padding:14px 15px;max-width:330px;font-family:"Segoe UI",system-ui,Arial,sans-serif;color:#0f1e2b}' +
+        '.driver-popover-title{font-size:14.5px;color:#0f766e;margin-bottom:2px}' +
+        '.driver-popover-description{font-size:12.5px;line-height:1.5}' +
+        '.driver-popover-close-btn{color:#94a3b8}' +
+        '.driver-popover-close-btn:hover{color:#0f1e2b}' +
+        '.driver-popover-footer-btn{border-color:#cbd5e1;border-radius:6px;padding:5px 10px;font-size:12.5px}' +
+        '.driver-popover-progress-text{font-size:12px;color:#5b6b7a}' +
+        '.driver-popover-visible-title{font-size:13px;margin:0 0 3px}' +
+        '.tour-badge{display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;border-radius:9px;margin-right:4px;vertical-align:1px}' +
+        '.tour-req{background:#fee2e2;color:#991b1b}.tour-opt{background:#e2e8f0;color:#334155}' +
+        '.tour-auto{background:#dbeafe;color:#1e40af}' +
+        '.tour-meta{font-size:11.5px;color:#5b6b7a;margin:4px 0 6px}' +
+        '.tour-ex{font-size:11.5px;margin-bottom:5px}.tour-ex code{background:#f1f5f9;border:1px solid #d6dde3;' +
+        'border-radius:4px;padding:0 4px;font-size:11px}' +
+        '.tour-tip{font-size:11.5px;background:#f0fdfa;border-left:3px solid #0f766e;padding:5px 7px;' +
+        'border-radius:0 5px 5px 0;margin:5px 0}' +
+        '.tour-valid{font-size:11.5px;margin-top:6px;min-height:16px;font-weight:600}' +
+        '.tour-valid.ok{color:#16a34a}.tour-valid.err{color:#dc2626}.tour-valid.idle{color:#5b6b7a;font-weight:400}';
+      doc.head.appendChild(style);
+
+      var sc = doc.createElement('script');
+      sc.src = 'js/lib/driver.iife.js';
+      sc.onload = function () { resolve(true); };
+      sc.onerror = function () { resolve(false); };
+      doc.head.appendChild(sc);
+      setTimeout(function () {
+        resolve(!!(win.driver && win.driver.js && win.driver.js.driver));
+      }, 1500);
+    });
+  }
+
+  /* ---------------- isi popover ---------------- */
+  function specText(f) {
+    var b = ['tipe: <code>' + esc(f.type || 'text') + '</code>'];
+    if (f.min != null) b.push('min <code>' + f.min + '</code>');
+    if (f.max != null) b.push('maks <code>' + f.max + '</code>');
+    if (f.pattern) b.push('pola <code>' + esc(f.pattern) + '</code>');
+    if (f.options) b.push('pilihan: ' + esc(f.options.filter(Boolean).join(' / ')));
+    return b.join(' · ');
+  }
+  function popoverHTML(s) {
+    var f = s.field;
+    var badge = f.required ? '<span class="tour-badge tour-req">Wajib</span>'
+      : (f.virtual ? '<span class="tour-badge tour-auto">Tanpa kolom input</span>'
+        : '<span class="tour-badge tour-opt">Opsional</span>');
+    if (f.auto) badge += '<span class="tour-badge tour-auto">Auto</span>';
+    return badge +
+      '<div class="tour-meta">' + specText(f) + '</div>' +
+      (f.example ? '<div class="tour-ex">Contoh: <code>' + esc(f.example) + '</code></div>' : '') +
+      (f.tips ? '<div class="tour-tip">' + esc(f.tips) + '</div>' : '') +
+      (f.errors && f.errors.length ? '<details class="tour-err"><summary style="font-size:11.5px;cursor:pointer;color:#5b6b7a">' +
+        'Skenario validasi gagal</summary><ul style="font-size:11.5px;margin:4px 0 0;padding-left:16px">' +
+        f.errors.map(function (e) { return '<li>' + esc(e) + '</li>'; }).join('') + '</ul></details>' : '') +
+      '<div class="tour-valid idle" id="tourValid"></div>';
+  }
+
+  /* ---------------- validasi real-time di field aktif ---------------- */
+  function bindValidation(el, s) {
+    if (!el || el.__tourBound === s.field.k) return;
+    el.__tourBound = s.field.k;
+    var isComplex = !!(el.matches && (el.matches('tr,table,.box,.vrow,#chsAkses,.chips') ||
+      el.closest('table') || el.closest('#chsAkses')));
+    function paint() {
+      var box = frameCtx.doc.getElementById('tourValid');
+      if (!box) return;
+      if (isComplex) {
+        box.className = 'tour-valid idle';
+        box.textContent = 'Area kompleks — isi langsung pada bagian yang disorot.';
+        return;
+      }
+      var val = el.type === 'checkbox' ? (el.checked ? '1' : '') : String(el.value == null ? '' : el.value);
+      var res = CathlabSchema.validate(s.field, val);
+      if (String(val).trim() === '' && !s.field.required) {
+        box.className = 'tour-valid ok'; box.textContent = '✓ Kosong — boleh (opsional).';
+      } else if (res.ok) {
+        box.className = 'tour-valid ok'; box.textContent = '✓ Format valid.';
+      } else {
+        box.className = 'tour-valid err'; box.textContent = '✕ ' + res.msg;
+      }
+    }
+    ['input', 'change', 'blur'].forEach(function (evt) { el.addEventListener(evt, paint); });
+    // popover bisa dirender ulang oleh Driver.js → cat ulang beberapa kali
+    setTimeout(paint, 0); setTimeout(paint, 60); setTimeout(paint, 250);
+  }
+
+  /* ---------------- panel informasi di halaman induk ---------------- */
+  function renderPanel(s) {
+    if (!s) {
+      $('#tiTitle').textContent = 'Panduan';
+      $('#tiDesc').textContent = 'Klik "Mulai Tur" untuk memulai, atau pilih field pada daftar di kiri.';
+      $('#tiBody').innerHTML = '';
+      return;
+    }
+    $('#tiTitle').textContent = s.section.title + ' — ' + s.title;
+    $('#tiDesc').textContent = s.section.desc;
+    var errs = (s.field.errors && s.field.errors.length)
+      ? '<ul class="tight">' + s.field.errors.map(function (e) { return '<li>' + esc(e) + '</li>'; }).join('') + '</ul>'
+      : '<p class="muted small">Tidak ada error khusus — field ini bebas diisi.</p>';
+    $('#tiBody').innerHTML =
+      '<dl class="kv">' +
+      '<dt>Field (kunci)</dt><dd><code>' + esc(s.field.k) + '</code></dd>' +
+      '<dt>Form</dt><dd>' + (s.field.f || ['S', 'L']).map(function (x) {
+        return '<span class="tag tag-' + x + '">' + (x === 'S' ? 'Simple' : 'Lengkap') + '</span>'; }).join(' ') + '</dd>' +
+      '<dt>Spesifikasi</dt><dd>' + specText(s.field) + '</dd>' +
+      '<dt>Contoh input</dt><dd><code>' + esc(s.field.example || '—') + '</code></dd>' +
+      '</dl>' +
+      (s.field.tips ? '<div class="callout">💡 ' + esc(s.field.tips) + '</div>' : '') +
+      '<h3>Skenario validasi gagal</h3>' + errs;
+  }
+
+  /* ---------------- sinkronisasi UI induk ---------------- */
+  function syncUI(i) {
+    idx = i;
+    var total = steps.length || 1;
+    $('#prog').style.width = ((i + 1) / total * 100) + '%';
+    $('#tinfo').textContent = (i + 1) + ' / ' + total;
+    $('#live').textContent = running ? 'Tour aktif' : 'Tour nonaktif';
+    $('#live').classList.toggle('on', running);
+    $('#btnStop').disabled = !running;
+    $('#btnPrev').disabled = !running || i === 0;
+    $('#btnNext').disabled = !running;
+    Docs.$$('#stepList button.step').forEach(function (b, n) {
+      b.classList.toggle('on', n === i);
+      b.classList.toggle('done', n < i);
+    });
+    renderPanel(steps[i] || null);
+  }
+
+  /* ---------------- buat instance Driver.js ---------------- */
+  function createDriver() {
+    if (!frameCtx) return;
+    var factory = frameCtx.win.driver.js.driver;
+    var docSteps = steps.map(function (s) {
+      return {
+        element: function () { try { return frameCtx.doc.querySelector(s.sel) || null; } catch (e) { return null; } },
+        waitForElement: 1200,
+        popover: {
+          title: s.title,
+          description: popoverHTML(s),
+          side: 'bottom',
+          showProgress: true,
+          progressText: 'Field {{current}} dari {{total}}'
+        },
+        data: { key: s.field.k }
+      };
+    });
+
+    d = factory({
+      steps: docSteps,
+      allowClose: true,
+      allowScroll: true,
+      smoothScroll: false,          // scroll instan → lebih andal
+      animate: true,
+      duration: 260,
+      overlayColor: '#0f1e2b',
+      overlayOpacity: 0.62,
+      stagePadding: 6,
+      stageRadius: 6,
+      popoverOffset: 10,
+      popoverClass: 'cathlab-popover',
+      showProgress: true,
+      progressText: 'Field {{current}} dari {{total}}',
+      showButtons: ['previous', 'next', 'close'],
+      nextBtnText: 'Berikutnya →',
+      prevBtnText: '← Sebelumnya',
+      doneBtnText: 'Selesai ✓',
+      disableActiveInteraction: false,   // user boleh mengetik di field
+      onHighlightStarted: function (element, step, opts) {
+        var i = (opts && typeof opts.index === 'number') ? opts.index : 0;
+        syncUI(i);
+        var s = steps[i];
+        if (s && element) bindValidation(element, s);
+      },
+      onPopoverRender: function (popover, opts) {
+        var i = (opts && typeof opts.index === 'number') ? opts.index : 0;
+        var s = steps[i];
+        if (!s) return;
+        try {
+          var el = frameCtx.doc.querySelector(s.sel);
+          if (el) bindValidation(el, s);
+        } catch (e) { /* ignore */ }
+      },
+      onDestroyed: function () {
+        running = false;
+        syncUI(Math.max(idx, 0));
+      }
+    });
+    driverReady = true;
+  }
+
+  /* ---------------- kontrol tur ---------------- */
+  function startTour(from) {
+    if (!driverReady || !d) {
+      Docs.toast('Tur belum siap — form masih dimuat. Coba beberapa saat lagi.', 'err');
+      return;
+    }
+    running = true;
+    d.drive(typeof from === 'number' ? from : 0);
+    syncUI(typeof from === 'number' ? from : 0);
+  }
+  function stopTour() { if (d && running) d.destroy(); }
+
+  function start() {
+    $('#btnStart').onclick = Docs.guard(function () { startTour(0); }, 'mulai tur');
+    $('#btnNext').onclick = Docs.guard(function () {
+      if (!running) return startTour(0);
+      if (d.hasNextStep()) { d.moveNext(); } else { Docs.toast('Ini field terakhir.', 'ok'); }
+    }, 'next');
+    $('#btnPrev').onclick = Docs.guard(function () { if (running && d.hasPreviousStep()) d.movePrevious(); }, 'prev');
+    $('#btnSkip').onclick = Docs.guard(function () {
+      if (!running) return startTour(0);
+      if (d.hasNextStep()) d.moveNext();
+      else { Docs.toast('Tur selesai.', 'ok'); d.destroy(); }
+    }, 'skip');
+    $('#btnStop').onclick = Docs.guard(stopTour, 'akhiri');
+    $('#stepList').addEventListener('click', Docs.guard(function (e) {
+      var b = e.target.closest('button.step'); if (!b) return;
+      var i = +b.dataset.i;
+      if (running && driverReady) { d.moveTo(i); syncUI(i); }
+      else { startTour(i); }
+    }, 'daftar step'));
+  }
+
+  /* ---------------- init ---------------- */
+  function init() {
+    buildSteps();
+    renderStepList();
+    frame.src = file;
+    $('#linkForm').href = file;
+    $('#fallbackLink').href = file;
+    $('#swL').classList.toggle('on', form === 'lengkap');
+    $('#swS').classList.toggle('on', form === 'simple');
+    $('#tinfo').textContent = '0 / ' + steps.length;
+    start();
+  }
+
+  frame.addEventListener('load', Docs.guard(function () {
+    var r = Docs.safeFrame(frame);
+    if (!r.ok) {
+      frameCtx = null; driverReady = false;
+      $('#viewer').classList.add('blocked');
+      $('#btnStart').disabled = true;
+      $('#btnNext').disabled = true;
+      $('#btnPrev').disabled = true;
+      $('#btnSkip').disabled = true;
+      Docs.toast('Preview diblokir (mode file://). Tur nonaktif — panel penjelasan tetap tersedia.', 'err');
+      renderPanel(steps[0]);
+      return;
+    }
+    frameCtx = r;
+    $('#viewer').classList.remove('blocked');
+    $('#btnStart').disabled = false;
+    loadDriver().then(function (ok) {
+      if (!ok) {
+        $('#btnStart').disabled = true;
+        Docs.toast('Driver.js gagal dimuat — tur nonaktif.', 'err');
+        return;
+      }
+      createDriver();
+      Docs.toast('Siap. Klik "Mulai Tur" untuk memandu pengisian form.', 'ok');
+      var m = location.search.match(/[?&]step=(\d+)/);
+      if (m) {
+        var n = parseInt(m[1], 10);
+        if (!isNaN(n)) startTour(Math.min(n, steps.length - 1));
+      }
+    });
+  }, 'iframe load'));
+
+  init();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dokumentasi Form Cathlab — Field Reference</title>
+<link rel="stylesheet" href="css/docs.css">
+<style>
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.toolbar input[type=search] {
+  flex: 1; min-width: 180px; padding: 8px 10px; border: 1px solid #bcc7d0;
+  border-radius: 6px; font: inherit; background: #fff;
+}
+.toolbar input[type=search]:focus { outline: 2px solid var(--ac); outline-offset: -1px; }
+.filters { display: flex; gap: 4px; }
+.filters button { font-size: 12px; padding: 6px 11px; border: 1px solid var(--ln); border-radius: 14px; background: #fff; cursor: pointer; font-family: inherit; }
+.filters button.on { background: var(--ac); border-color: var(--ac); color: #fff; font-weight: 600; }
+
+.toc { position: sticky; top: 62px; z-index: 5; }
+.toc a {
+  display: block; font-size: 12.5px; padding: 5px 8px; border-radius: 6px;
+  text-decoration: none; color: var(--ink); border-left: 3px solid transparent;
+}
+.toc a:hover { background: #f0fdfa; color: var(--ac); }
+.toc a.on { border-left-color: var(--ac); background: #f0fdfa; color: var(--ac); font-weight: 600; }
+
+.layout { display: grid; grid-template-columns: 260px 1fr; gap: 14px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .toc { position: static; } }
+
+.doc { scroll-margin-top: 70px; }
+.doc > h2 { display: flex; align-items: center; gap: 8px; }
+.doc > h2 .n {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; background: var(--ac); color: #fff;
+  border-radius: 50%; font-size: 12px;
+}
+.fieldset { border: 1px solid var(--ln); border-radius: 10px; margin-bottom: 12px; overflow: hidden; background: #fff; }
+.fieldset > summary {
+  cursor: pointer; padding: 11px 14px; background: var(--card2);
+  font-weight: 600; font-size: 13.5px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.fieldset > summary::-webkit-details-marker { display: none; }
+.fieldset > summary .code { font-weight: 400; color: var(--mu); font-size: 12px; font-family: Consolas, monospace; }
+.fbody { padding: 12px 14px; border-top: 1px solid var(--ln); }
+.fbody table { font-size: 12.5px; }
+.fbody td:first-child { width: 170px; font-weight: 600; color: var(--mu); }
+.errlist { margin: 6px 0 0; padding-left: 18px; }
+.errlist li { font-size: 12.5px; margin-bottom: 3px; }
+.ex { background: #f8fafb; border: 1px dashed #bcc7d0; border-radius: 6px; padding: 6px 8px; font-family: Consolas, monospace; font-size: 12px; }
+.empty { padding: 30px; text-align: center; color: var(--mu); }
+</style>
+</head>
+<body>
+
+<div class="dbar">
+  <div class="t">Cathlab Docs · Dokumentasi Form</div>
+  <nav>
+    <a href="form-guide.html">Interactive Guide</a>
+    <a href="form-walkthrough.html">Walkthrough</a>
+    <a href="index.html">← Halaman Depan</a>
+  </nav>
+</div>
+
+<main>
+  <div class="page-head">
+    <h1>Dokumentasi Form &amp; Bantuan Kontekstual</h1>
+    <p>Referensi lengkap setiap field pada <code>form-input-simple.html</code> dan <code>form-input-lengkap.html</code> — deskripsi, tipe data, format yang diterima, validasi, contoh input, dan skenario error.</p>
+  </div>
+
+  <div class="toolbar">
+    <input type="search" id="q" placeholder="Cari field… (mis. stent, kontras, rm, tanggal)">
+    <div class="filters" id="filters">
+      <button data-f="all" class="on">Semua</button>
+      <button data-f="simple">Form Simple</button>
+      <button data-f="lengkap">Form Lengkap</button>
+    </div>
+    <button class="btn" id="expandAll">Buka semua</button>
+    <button class="btn" id="collapseAll">Tutup semua</button>
+  </div>
+
+  <div class="layout">
+    <aside class="card toc" id="toc"></aside>
+    <section id="docs"></section>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script src="js/docs-common.js"></script>
+<script src="js/form-schema.js"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = Docs.$, esc = Docs.esc;
+  var filter = 'all', query = '';
+
+  function fmtSpec(f) {
+    var rows = [];
+    rows.push(['Tipe data', '<code>' + esc(f.type || 'text') + '</code>']);
+    if (f.pattern) rows.push(['Pola (regex)', '<code>' + esc(f.pattern) + '</code>' + (f.patternMsg ? ' — ' + esc(f.patternMsg) : '')]);
+    if (f.min != null) rows.push(['Panjang / nilai min', String(f.min) + (f.type === 'text' ? ' karakter' : '')]);
+    if (f.max != null) rows.push(['Panjang / nilai maks', String(f.max) + (f.type === 'text' ? ' karakter' : '')]);
+    if (f.options && f.options.length) rows.push(['Pilihan sah', f.options.filter(function (o) { return o !== ''; }).map(function (o) { return '<code>' + esc(o) + '</code>'; }).join(' · ')]);
+    if (f.default != null) rows.push(['Nilai default', '<code>' + esc(f.default) + '</code>']);
+    if (f.depends) rows.push(['Tampil bila', 'field <code>' + esc(f.depends) + '</code> bernilai dua fase (PCI/PPCI, Rotablator, Lain-lain)']);
+    if (f.auto) rows.push(['Pengisian', 'otomatis oleh sistem']);
+    return rows;
+  }
+
+  function validationText(f) {
+    var v = [];
+    if (f.required) v.push('Wajib diisi');
+    if (f.type === 'number') v.push('Numerik' + (f.min != null ? ' ' + f.min + '–' + f.max : ''));
+    if (f.type === 'date') v.push('Format YYYY-MM-DD');
+    if (f.type === 'time') v.push('Format HH:MM (24 jam)');
+    if (f.type === 'select') v.push('Harus salah satu dari daftar pilihan');
+    if (f.pattern) v.push('Harus sesuai pola regex');
+    if (f.min != null && f.type === 'text') v.push('Minimal ' + f.min + ' karakter');
+    if (f.max != null && f.type === 'text') v.push('Maksimal ' + f.max + ' karakter');
+    if (!v.length) v.push('Tidak ada validasi wajib');
+    return v.join(' · ');
+  }
+
+  function fieldBlock(f, sec) {
+    var spec = fmtSpec(f);
+    var errs = (f.errors && f.errors.length)
+      ? '<ul class="errlist">' + f.errors.map(function (e) { return '<li>' + esc(e) + '</li>'; }).join('') + '</ul>'
+      : '<p class="muted small" style="margin:4px 0 0">Tidak ada skenario error khusus.</p>';
+
+    var extra = '';
+    if (f.k === 'diagram') {
+      extra = '<h4>Segmen yang dapat ditandai</h4><div class="tw"><table><thead><tr><th>Form Simple</th><th>Form Lengkap (AHA)</th></tr></thead><tbody><tr>' +
+        '<td>' + (sec.segmentsSimple || []).map(function (s) { return '<code>' + esc(s) + '</code>'; }).join(', ') + '</td>' +
+        '<td>' + (sec.segmentsLengkap || []).map(function (s) { return '<code>' + esc(s[0] + ' ' + s[1]) + '</code>'; }).join(', ') + '</td></tr></tbody></table></div>' +
+        '<h4>Status &amp; warna</h4><div class="tw"><table><thead><tr><th>Status</th><th>Warna diagram</th><th>Peran</th></tr></thead><tbody>' +
+        '<tr><td><code>normal</code> Normal</td><td>hijau</td><td>segumen tanpa lesi</td></tr>' +
+        '<tr><td><code>stenosis</code> Stenosis</td><td>merah putus-putus</td><td>perlu derajat (%)</td></tr>' +
+        '<tr><td><code>stent</code> Stent</td><td>biru tebal</td><td>otomatis dari tabel stent</td></tr>' +
+        '<tr><td><code>thrombus</code> Trombus</td><td>jingga putus-putus rapat</td><td>catatan biasanya di kolom Catatan</td></tr>' +
+        '<tr><td><code>cto</code> Oklusi total</td><td>merah tua bertitik</td><td>tidak ada aliran distal</td></tr>' +
+        '</tbody></table></div>';
+    }
+    if (f.k === 'stent') {
+      extra = '<h4>Kolom tabel stent</h4><div class="tw"><table><thead><tr><th>Kolom</th><th>Tipe</th><th>Contoh</th><th>Catatan</th></tr></thead><tbody>' +
+        '<tr><td>Segmen</td><td>select (daftar segmen)</td><td><code>7 LAD mid</code></td><td>Lengkap memakai kode AHA, Simple memakai nama</td></tr>' +
+        '<tr><td>Tipe</td><td>select</td><td><code>DES</code> / <code>BMS</code> / <code>DCB</code></td><td>Lengkap menambah Scaffold &amp; Lain</td></tr>' +
+        '<tr><td>Merek</td><td>text</td><td><code>Eternia</code></td><td>Ikut tampil di catatan segmen diagram</td></tr>' +
+        '<tr><td>Dia × Panjang</td><td>text</td><td><code>3.0</code> × <code>24</code></td><td>Satuan mm</td></tr>' +
+        '<tr><td>Tekanan / Post-dil</td><td>text</td><td><code>10</code> / <code>12</code></td><td>Satuan atm</td></tr>' +
+        '<tr><td>No. Lot &amp; Exp.</td><td>text / date</td><td><code>ETN2024A</code></td><td>Hanya di form Lengkap</td></tr>' +
+        '<tr><td>Direct</td><td>checkbox</td><td><code>✓</code></td><td>Hanya di form Lengkap; memengaruhi narasi</td></tr>' +
+        '</tbody></table></div>';
+    }
+    if (f.k === 'akses') {
+      extra = '<h4>Lokasi akses</h4><div class="tw"><table><thead><tr><th>Simple</th><th>Lengkap</th></tr></thead><tbody><tr>' +
+        '<td>Radialis kanan · Radialis kiri · Brachialis · Femoral kanan · Femoral kiri</td>' +
+        '<td>Radialis kanan · Radialis kiri · Brachialis kanan · Brachialis kiri · Femoral kanan · Femoral kiri</td></tr></tbody></table></div>';
+    }
+
+    return '<details class="fieldset" data-keys="' + esc((f.k + ' ' + f.label + ' ' + (f.example || '')).toLowerCase()) + '"' + (f.required ? ' open' : '') + '>' +
+      '<summary>' + esc(f.label.replace(/\s*\*$/, '')) +
+      (f.required ? ' <span class="tag tag-req">Wajib</span>' : (f.virtual ? ' <span class="tag tag-auto">Tanpa kolom input</span>' : ' <span class="tag tag-opt">Opsional</span>')) +
+      (f.auto ? ' <span class="tag tag-auto">Auto</span>' : '') +
+      ' <span class="code">' + esc(f.k) + '</span></summary>' +
+      '<div class="fbody">' +
+      '<div class="tw"><table><tbody>' +
+      spec.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + r[1] + '</td></tr>'; }).join('') +
+      '<tr><td>Validasi</td><td>' + esc(validationText(f)) + '</td></tr>' +
+      '<tr><td>Tersedia di</td><td>' + (f.f || ['S', 'L']).map(function (x) { return '<span class="tag tag-' + x + '">' + (x === 'S' ? 'Simple' : 'Lengkap') + '</span>'; }).join(' ') + '</td></tr>' +
+      '<tr><td>Contoh input</td><td><div class="ex">' + esc(f.example || '—') + '</div></td></tr>' +
+      '</tbody></table></div>' +
+      (f.tips ? '<div class="callout">💡 <b>Tips:</b> ' + esc(f.tips) + '</div>' : '') +
+      '<div class="callout warn"><b>⚠ Common mistakes:</b> ' + esc(commonMistake(f)) + '</div>' +
+      '<h4>Error messages (skenario validasi gagal)</h4>' + errs +
+      extra +
+      '</div></details>';
+  }
+
+  function commonMistake(f) {
+    if (f.pattern) return 'Menyalin format dari sistem lain (mis. memakai garis miring atau spasi) sehingga tidak cocok dengan pola yang diminta.';
+    if (f.type === 'number') return 'Mengetik satuan di dalam angka ("150 cc") atau memakai koma desimal pada kolom angka.';
+    if (f.type === 'date') return 'Mengetik tanggal Indonesia ("03/09/2026") pada kolom date — browser hanya menerima YYYY-MM-DD.';
+    if (f.type === 'time') return 'Mengetik "23.21" atau "11 PM"; gunakan 24 jam HH:MM.';
+    if (f.type === 'select') return 'Mengetiknya langsung di kolom — kolom select hanya menerima pilihan yang tersedia.';
+    return 'Meninggalkan kolom wajib kosong lalu langsung menekan Cetak.';
+  }
+
+  function render() {
+    var q = query.trim().toLowerCase();
+    var html = '';
+    var toc = '';
+    var count = 0;
+
+    CathlabSchema.SECTIONS.forEach(function (sec) {
+      var fields = sec.fields.filter(function (f) {
+        var inForm = (filter === 'all') || (f.f && f.f.indexOf(filter) >= 0);
+        if (!inForm) return false;
+        if (!q) return true;
+        var hay = (f.k + ' ' + f.label + ' ' + (f.example || '') + ' ' + (f.tips || '')).toLowerCase();
+        return hay.indexOf(q) >= 0;
+      });
+      if (!fields.length) return;
+      count += fields.length;
+
+      toc += '<a href="#' + sec.id + '">' + sec.n + '. ' + esc(sec.title) + '</a>';
+      html += '<div class="card doc" id="' + sec.id + '">' +
+        '<h2><span class="n">' + sec.n + '</span>' + esc(sec.title) + '</h2>' +
+        '<p class="hint">' + esc(sec.desc) + '</p>' +
+        '<p class="small muted">Judul pada form: Simple → <b>' + esc(sec.simpleTitle || sec.title) + '</b>' +
+        (sec.lengkapTitle ? ' · Lengkap → <b>' + esc(sec.lengkapTitle) + '</b>' : '') + '</p>' +
+        fields.map(function (f) { return fieldBlock(f, sec); }).join('') +
+        '</div>';
+    });
+
+    $('#docs').innerHTML = html || '<div class="card empty">Tidak ada field yang cocok dengan pencarian/filter ini.<br><span class="small">Coba kata kunci lain atau pilih filter "Semua".</span></div>';
+    $('#toc').innerHTML = toc || '<p class="muted small">Tidak ada hasil.</p>';
+    $('#q').setAttribute('aria-label', 'Cari field');
+    Docs.toast(count + ' field ditampilkan.', '');
+  }
+
+  $('#q').addEventListener('input', Docs.guard(function (e) { query = e.target.value; render(); }, 'pencarian'));
+  $('#filters').addEventListener('click', Docs.guard(function (e) {
+    var b = e.target.closest('button[data-f]'); if (!b) return;
+    filter = b.dataset.f;
+    Docs.$$('#filters button').forEach(function (x) { x.classList.toggle('on', x === b); });
+    render();
+  }, 'filter form'));
+  $('#expandAll').onclick = Docs.guard(function () { Docs.$$('details.fieldset').forEach(function (d) { d.open = true; }); }, 'buka semua');
+  $('#collapseAll').onclick = Docs.guard(function () { Docs.$$('details.fieldset').forEach(function (d) { d.open = false; }); }, 'tutup semua');
+
+  /* Highlight TOC saat scroll */
+  window.addEventListener('scroll', Docs.guard(function () {
+    var links = Docs.$$('#toc a'), best = null;
+    links.forEach(function (a) {
+      var el = document.getElementById(a.getAttribute('href').slice(1));
+      if (el && el.getBoundingClientRect().top <= 90) best = a;
+    });
+    links.forEach(function (a) { a.classList.toggle('on', a === best); });
+  }, 'scroll spy'), { passive: true });
+
+  render();
+})();
+</script>
+</body>
+</html>
