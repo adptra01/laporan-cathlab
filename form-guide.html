@@ -312,6 +312,19 @@
     renderPanel(steps[i] || null);
   }
 
+  /* ---------------- indeks pada hook bisa basi → pakai step.data.key ---------------- */
+  function resolveStep(stepOrOpts, index) {
+    var cand = (stepOrOpts && stepOrOpts.data && stepOrOpts.data.key) ? stepOrOpts
+      : (stepOrOpts && stepOrOpts.step) ? stepOrOpts.step : null;
+    if (cand && cand.data && cand.data.key) {
+      for (var i = 0; i < steps.length; i++) {
+        if (steps[i].field.k === cand.data.key) return { i: i, s: steps[i] };
+      }
+    }
+    var n = (typeof index === 'number' && index >= 0 && index < steps.length) ? index : 0;
+    return { i: n, s: steps[n] };
+  }
+
   /* ---------------- buat instance Driver.js ---------------- */
   function createDriver() {
     if (!frameCtx) return;
@@ -352,18 +365,16 @@
       doneBtnText: 'Selesai ✓',
       disableActiveInteraction: false,   // user boleh mengetik di field
       onHighlightStarted: function (element, step, opts) {
-        var i = (opts && typeof opts.index === 'number') ? opts.index : 0;
-        syncUI(i);
-        var s = steps[i];
-        if (s && element) bindValidation(element, s);
+        var r = resolveStep(step, opts && opts.index);
+        syncUI(r.i);
+        if (r.s && element) bindValidation(element, r.s);
       },
       onPopoverRender: function (popover, opts) {
-        var i = (opts && typeof opts.index === 'number') ? opts.index : 0;
-        var s = steps[i];
-        if (!s) return;
+        var r = resolveStep(opts && opts.step, opts && opts.index);
+        if (!r.s) return;
         try {
-          var el = frameCtx.doc.querySelector(s.sel);
-          if (el) bindValidation(el, s);
+          var el = frameCtx.doc.querySelector(r.s.sel);
+          if (el) bindValidation(el, r.s);
         } catch (e) { /* ignore */ }
       },
       onDestroyed: function () {
