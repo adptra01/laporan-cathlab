@@ -1,0 +1,22 @@
+# Secrets
+.env
+.env.local
+*.pem
+*.key
+*.pfx
+*.p12
+id_rsa
+id_ed25519
+credentials.json
+service-account.json
+token.json
+
+# Logs & cache
+*.log
+__pycache__/
+node_modules/
+dist/
+build/
+.cache/
+*.sqlite
+*.db
