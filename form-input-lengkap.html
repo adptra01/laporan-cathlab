@@ -177,9 +177,6 @@ body.pv .pvbar{display:flex}
     <span id="sv">—</span>
     <button data-a="demo">Contoh</button>
     <button data-a="reset">Reset</button>
-    <button data-a="exp">Ekspor</button>
-    <button data-a="imp">Impor</button>
-    <input type="file" id="impf" accept=".json" hidden>
     <button data-a="hist">Riwayat</button>
     <a href="simrs-guide.html" style="font:inherit;font-size:13px;padding:7px 13px;border:1px solid var(--ln);border-radius:6px;text-decoration:none;color:var(--ink);align-self:center">Panduan SIMRS</a>
     <button data-a="prev">Pratinjau</button>
@@ -1092,15 +1089,6 @@ document.addEventListener('change',e=>{
     refreshDiagramFields();
     autoSync();
   }
-  // import file
-  if(t.id==='impf'){
-    const r=new FileReader();
-    r.onload=()=>{
-      try{S=JSON.parse(r.result);renderAll();save();toast('Import berhasil.')}
-      catch(x){toast('File JSON tidak valid.')}
-    };
-    if(t.files[0])r.readAsText(t.files[0]);
-  }
 });
 
 // KEYDOWN: autoload RM
@@ -1113,7 +1101,6 @@ document.addEventListener('keydown',e=>{
   if(e.target.matches('input,textarea,select'))return;
   if(e.ctrlKey||e.metaKey){
     if(e.key==='s'){e.preventDefault();save();toast('Disimpan.');return}
-    if(e.key==='e'){e.preventDefault();exportJSON();return}
     if(e.key==='p'){e.preventDefault();openPreview();setTimeout(()=>window.print(),200);return}
   }
   if(e.key==='Escape')closeModal();
@@ -1190,8 +1177,6 @@ document.addEventListener('click',e=>{
   if(a==='clrTtd'){S.ttd='';renderAll();autoSync();return}
   if(a==='demo'){if(confirm('Muat data contoh? Isian akan tertimpa.'))demo();return}
   if(a==='reset'){if(confirm('Hapus semua isian?')){S=blank();renderAll();save();toast('Form direset.')}return}
-  if(a==='exp'){exportJSON();return}
-  if(a==='imp'){$('#impf').click();return}
   if(a==='hist'){showHistory();return}
   if(a==='prev'){openPreview();return}
   if(a==='print'){openPreview();setTimeout(()=>window.print(),200);return}
@@ -1571,17 +1556,8 @@ function bcPrintHTML(sizeMm,cellSize){
 }
 
 /* =========================================================
-   EXPORT / HISTORY
+   RIWAYAT VERSI
    ========================================================= */
-function exportJSON(){
-  const blob=new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=`cathlab_${S.f.rm||'draft'}_${S.f.tgl}.json`;
-  a.click();
-  snap('Export JSON');save();
-  toast('File JSON diunduh.');
-}
 function showHistory(){
   if(!S.f.rm){toast('Isi No. RM dulu.');return}
   const hist=JSON.parse(localStorage.getItem(HIST_KEY)||'{}');

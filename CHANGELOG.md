@@ -43,6 +43,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), Versi [SemVer]
   ringkas/epikrisis memakai helper `sirkulerHTML()` yang hanya menampilkan
   perawat sirkuler yang terisi.
 
+### Dihapus
+- **Fungsi Ekspor & Impor JSON** dari form utama: tombol `Ekspor` dan
+  `Impor`, input file `#impf`, handler `FileReader`, fungsi `exportJSON()`,
+  dan pintasan `Ctrl+E`. Penyimpanan tetap memakai auto-save `localStorage`
+  dengan riwayat versi (maks. 20 snapshot per RM).
+
 ### Ditambahkan
 - Halaman depan (`index.html`) sebagai pintu masuk pilihan form.
 - `form-input-simple.html` — form laporan cathlab versi ringkas.

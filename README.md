@@ -10,7 +10,7 @@ dokumentasi, panduan interaktif, dan panduan integrasi SIMRS.
 | Halaman | File | Fungsi |
 |---|---|---|
 | Halaman Depan | `index.html` | Pintu masuk, memilih versi form atau dokumentasi |
-| Form Laporan | `form-input-lengkap.html` | Form lengkap (14 section): timeline vital, registry obat & stent, komplikasi terstruktur, 3 template cetak, ekspor/impor JSON, riwayat, integrasi SIMRS |
+| Form Laporan | `form-input-lengkap.html` | Form lengkap (14 section): timeline vital, registry alat, komplikasi terstruktur, 3 template cetak, riwayat versi, integrasi SIMRS |
 | Interactive Form Guide | `form-guide.html` | Tur Driver.js di atas form: highlight field, tooltip, validasi real-time, Next/Prev/Skip |
 | Dokumentasi Form | `form-docs.html` | Referensi tiap field: tipe data, format, regex, validasi, contoh, error |
 | Step-by-Step Walkthrough | `form-walkthrough.html` | Pengisian 7 step: progress, validasi per step, ringkasan + JSON |
