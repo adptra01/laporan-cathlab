@@ -45,17 +45,21 @@ Field yang tersedia: Dokter Operator, Asisten/Scrub, **Perawat Sirkuler 1**,
 
 ## Barcode (pengganti tanda tangan gambar)
 
-Form gambar tanda tangan telah dihapus. Sekarang laporan memakai **barcode
-Code 128** yang dibuat otomatis dari `No. RM + tanggal tindakan`
+Form gambar tanda tangan telah dihapus. Laporan sekarang memakai **barcode QR
+persegi** yang dibuat sepenuhnya otomatis dari `No. RM + tanggal tindakan`
 (mis. `CATHLAB-00051563-20260903`).
 
-- Bertubah otomatis selama belum diedit manual; tombol **Generate barcode**
-  mengembalikan ke nilai otomatis.
-- Tipe dapat diganti: CODE128 (default), CODE39, EAN13.
-- Tercetak sebagai **SVG inline** pada semua template (Lengkap, Ringkas,
-  Epikrisis) sehingga tetap tajam.
-- Nilai yang tidak cocok dengan format barcode akan menampilkan pesan error dan
-  dicetak sebagai teks biasa.
+- **Tanpa form input.** Tidak ada kolom isian, tombol generate, maupun pilihan
+  tipe — section 14 "Tembusan & Barcode" hanya berisi Tembusan dan data
+  penanda tangan.
+- **Otomatis.** Nilainya diturunkan langsung dari No. RM + tanggal tindakan
+  setiap kali laporan dicetak, jadi selalu konsisten dengan data pasien.
+- **Persegi.** Dipakai QR code (bukan barcode garis memanjang) supaya tetap
+  mudah discan dan tidak memakan lebar halaman A4.
+- Tercetak sebagai **SVG inline** 28×28 mm pada semua template (Lengkap,
+  Ringkas, Epikrisis) sehingga tetap tajam pada resolusi printer apa pun.
+- Nilai barcode juga dicetak di bawah QR agar dapat dibaca manusia bila
+  pemindaian otomatis tidak tersedia.
 
 ## Integrasi SIMRS
 
@@ -86,7 +90,7 @@ perilaku bawaan di GitHub Pages. Detail lengkap ada di `simrs-guide.html`.
 js/form-schema.js     sumber tunggal definisi field + mesin validasi
 js/docs-common.js     helper bersama (toast, guard error, akses iframe aman)
 js/lib/driver.iife.js Driver.js v1 (vanilla JS, tanpa framework)
-js/lib/JsBarcode.all.min.js  JsBarcode 3.11 (barcode SVG)
+js/lib/qrcode-generator.js   qrcode-generator 1.4.4 (QR SVG, MIT)
 css/lib/driver.css    stylesheet Driver.js
 css/docs.css          tema dokumentasi
 .nojekyll             agar GitHub Pages menyajikan file apa adanya

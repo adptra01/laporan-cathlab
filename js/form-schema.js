@@ -256,12 +256,11 @@ var SIMRS_DOCS = {
     },
     {
       id: 's13', n: 13, title: 'Tembusan & Barcode', lengkapTitle: '14. Tembusan & Barcode',
-      desc: 'Distribusi laporan dan barcode identifikasi. Barcode dibuat otomatis dari No. RM + tanggal tindakan (dapat diubah manual), menggantikan former gambar tanda tangan. Tidak ada file yang diunggah ke server.',
+      desc: 'Distribusi laporan dan nama penanda tangan. Barcode (QR) tidak memiliki form input: nilainya disusun otomatis dari No. RM + tanggal tindakan dan hanya muncul pada hasil cetak.',
       fields: [
         D('ttdTgl', 'Tanggal TTD', { example: '2026-09-04', tips: 'Default = hari ini.', errors: [] }),
         T('ttdNama', 'Nama DPJP Jantung', { required: true, max: 60, example: 'dr. Puspita Sari Bustanul, Sp.JP', tips: 'Wajib terisi di form Lengkap.', errors: ['Kosong → "Wajib diisi"'] }),
-        { k: 'barcode', label: 'Barcode Laporan', type: 'text', max: 60, example: 'CATHLAB-00051563-20260903', tips: 'Dibuat otomatis dari No. RM + tanggal tindakan. Berubah otomatis selama belum diedit manual; tombol "Generate barcode" mengembalikan ke nilai otomatis. Tipe: CODE128 (default), CODE39, EAN13.', errors: ['Nilai tidak cocok dengan format barcode → "Barcode gagal: format tidak didukung untuk nilai ini" (nilai tetap dicetak sebagai teks)'] },
-        { k: 'barcodeBox', label: 'Pratinjau Barcode', type: 'diagram', example: 'SVG barcode dengan nilai tercetak di bawahnya', tips: 'Barcode ikut tercetak pada semua template (Laporan Lengkap, Ringkas, Epikrisis). Dicetak sebagai SVG inline sehingga tetap tajam.', errors: [] },
+        { k: 'barcode', label: 'Barcode Laporan (QR)', type: 'auto', virtual: true, example: 'CATHLAB-00051563-20260903', tips: 'Tanpa form input. Nilai disusun otomatis dari No. RM + tanggal tindakan dengan pola CATHLAB-<No. RM>-<YYYYMMDD>, lalu dirender sebagai QR code persegi (28×28 mm) pada footer laporan cetak (Laporan Lengkap, Ringkas, dan Epikrisis) dalam bentuk SVG inline sehingga tetap tajam.', errors: [] },
         { k: 'tem', label: 'Tembusan', type: 'chips', options: ['Rekam Medis', 'BPJS', 'Cathlab', 'Operator', 'Pasien'], default: 'Rekam Medis, BPJS, Cathlab, Operator', tips: 'Centang tujuan distribusi; tercetak di footer laporan.', errors: [] }
       ]
     }

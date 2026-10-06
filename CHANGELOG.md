@@ -27,6 +27,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), Versi [SemVer]
   (mis. “LAD mid”, bukan “7 LAD mid”). Kode AHA tetap dipakai sebagai kunci
   internal diagram.
 
+### Barcode
+- Bentuk diubah dari barcode garis (CODE128) menjadi **QR code persegi** agar
+  tidak memanjang dan tetap mudah discan pada kertas A4.
+- Dibuat **sepenuhnya otomatis** dari `No. RM` + tanggal tindakan
+  (`CATHLAB-<No. RM>-<YYYYMMDD>`).
+- **Form input barcode dihapus**: tidak ada lagi kolom isian, tombol
+  “Generate barcode”, maupun pilihan tipe (CODE128/CODE39/EAN13). Section 14
+  kembali menjadi “Tembusan & Barcode” dan hanya memuat Tembusan + data TTD.
+- Barcode hanya dirender pada hasil cetak/pratinjau (28×28 mm, SVG inline) di
+  ketiga template: Laporan Lengkap, Ringkas, dan Epikrisis.
+- Ketergantungan JsBarcode diganti `qrcode-generator` 1.4.4 (MIT).
+
 ### Ditambahkan
 - Halaman depan (`index.html`) sebagai pintu masuk pilihan form.
 - `form-input-simple.html` — form laporan cathlab versi ringkas.

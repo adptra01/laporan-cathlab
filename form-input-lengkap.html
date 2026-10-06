@@ -147,8 +147,9 @@ body.pv .pvbar{display:flex}
 .ft ol{margin:3px 0;padding-left:16px}
 .ttd{text-align:center;min-width:220px}
 .ttd .sp{height:60px}
-.bc-box{border:1px dashed #bcc7d0;border-radius:6px;padding:10px;background:#fff;overflow:hidden}
-.bc-err{font-size:12px;color:var(--err);margin-top:4px}
+/* QR pada laporan cetak */
+.bc-qr{text-align:center}
+.bc-qr svg{display:block;margin:0 auto}
 .dp{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .dp.single{grid-template-columns:1fr;max-width:420px;margin:0 auto}
 .dp svg{max-height:240px}
@@ -211,7 +212,7 @@ body.pv .pvbar{display:flex}
 </div>
 <div id="print"></div>
 
-<script src="js/lib/JsBarcode.all.min.js"></script>
+<script src="js/lib/qrcode-generator.js"></script>
 <script>
 'use strict';
 /* =========================================================
@@ -329,7 +330,7 @@ const blank=()=>({
     kesimpulan:'',narasi:'',
     ttdTgl:today(),ttdNama:'',temRm:1,temBpjs:1,temCath:1,temOp:1,temPasien:0},
   akses:[],vitals:[],meds:[],seg:{A:{},B:{}},stents:[],
-  ttd:'',barcode:'',bcType:'CODE128',man:false,status:'Draft',audit:[]
+  ttd:'',man:false,status:'Draft',audit:[]
 });
 
 /* =========================================================
@@ -735,7 +736,8 @@ function sec_narasi(){
     </div>`);
 }
 function sec_ttd(){
-  return sec_wrap('s14','Tembusan & Barcode','Tentukan tujuan distribusi dan barcode identifikasi laporan.',
+  return sec_wrap('s14','Tembusan & Barcode',
+    'Tentukan tujuan distribusi laporan. Barcode dibuat otomatis dari No. RM + tanggal tindakan dan hanya tercetak pada laporan.',
     `<div class="g">
       <div class="fd wf"><label>Tembusan</label>
         <div class="chs">
@@ -744,18 +746,6 @@ function sec_ttd(){
       </div>
       ${fd('ttdTgl','Tanggal TTD','date')}
       ${fd('ttdNama','Nama DPJP Jantung','text','list=dpjpList')}
-      <div class="fd wf" data-w="barcode"><label>Isi barcode (otomatis dari No. RM + tanggal, bisa diubah)</label>
-        <input data-k="barcode" id="barcodeText" placeholder="mis. CATHLAB-00051563-20260903">
-        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-          <button data-a="bcgen" class="b2" type="button">Generate barcode</button>
-          ${['CODE128','CODE39','EAN13'].map(x=>`<button data-a="bctype" data-t="${x}" type="button">${x}</button>`).join('')}
-          <span style="font-size:12px;color:var(--mu)">Tipe: <b id="bcTypeLbl">CODE128</b></span>
-        </div>
-      </div>
-      <div class="fd wf" data-w="barcodeBox"><label>Pratinjau barcode</label>
-        <div class="bc-box" id="barcodeBox"></div>
-        <div class="bc-err" id="barcodeErr"></div>
-      </div>
     </div>`);
 }
 
@@ -782,7 +772,6 @@ function renderAll(){
   // restore narasi textarea
   const nt=$('#narasi');
   if(nt)nt.value=S.f.narasi||'';
-  if(typeof bcUpdate==='function')bcUpdate();
 }
 function refreshHeader(){
   const f=S.f;
@@ -1033,7 +1022,6 @@ function autoSync(){
   refreshHeader();
   calcJumpStatus();
   save();
-  if(typeof bcUpdate==='function')bcUpdate();
 }
 
 /* =========================================================
@@ -1104,7 +1092,6 @@ document.addEventListener('change',e=>{
     refreshDiagramFields();
     autoSync();
   }
-  // TTD upload — dihapus (diganti barcode)
   // import file
   if(t.id==='impf'){
     const r=new FileReader();
@@ -1200,8 +1187,6 @@ document.addEventListener('click',e=>{
     });
     return;
   }
-  if(a==='bcgen'){S.f.barcode=bcAuto();$$('[data-k]').forEach(el=>{if(el.dataset.k==='barcode')el.value=S.f.barcode});bcRender();autoSync();toast('Barcode dibuat: '+S.f.barcode,'ok')}
-  if(a==='bctype'){S.bcType=b.dataset.t;bcRender();save();const l=document.getElementById('bcTypeLbl');if(l)l.textContent=bcType()}
   if(a==='clrTtd'){S.ttd='';renderAll();autoSync();return}
   if(a==='demo'){if(confirm('Muat data contoh? Isian akan tertimpa.'))demo();return}
   if(a==='reset'){if(confirm('Hapus semua isian?')){S=blank();renderAll();save();toast('Form direset.')}return}
@@ -1419,7 +1404,7 @@ function footerHTML(){
       <b>DPJP Jantung</b>
       <div class="sp"></div>
       ( ${esc(f.ttdNama||'-')} )
-      ${bcPrintHTML()}
+      ${bcPrintHTML(28,4)}
     </div>
   </div>`;
 }
@@ -1535,62 +1520,43 @@ function printEpicrisis(){
         Dokter Pemeriksa / DPJP<br>
         <div class="sp"></div>
         <b>${esc(f.ttdNama||'-')}</b>
-        ${bcPrintHTML()}
+        ${bcPrintHTML(28,4)}
       </div>
     </div>
   </section>`;
 }
 
 /* =========================================================
-   BARCODE (pengganti tanda tangan gambar)
+   BARCODE — QR persegi, sepenuhnya otomatis
+   ------------------------------------------------------------
+   Tidak ada form input sama sekali. Nilai disusun dari
+   No. RM + tanggal tindakan (CATHLAB-<RM>-<YYYYMMDD>) dan
+   hanya dirender pada hasil cetak/pratinjau laporan.
+   Bentuk persegi dipilih agar tetap mudah discan saat
+   laporan dicetak pada kertas A4.
    ========================================================= */
-function bcAuto(){const f=S.f;return 'CATHLAB-'+(f.rm||'000000')+'-'+((f.tgl||'').replace(/-/g,'')||'00000000')}
-function bcVal(){const v=(S.f.barcode||'').trim();return v||bcAuto()}
-function bcType(){return S.bcType||'CODE128'}
-/* true bila barcode masih sama dengan hasil auto (belum diubah manual) */
-function bcAutoStill(){return (S.f.barcode||'').trim()===bcAuto()}
-function bcRender(){
-  const box=document.getElementById('barcodeBox'),err=document.getElementById('barcodeErr');
-  if(!box||typeof JsBarcode==='undefined')return;
-  const v=bcVal(),t=bcType();
-  err.textContent='';
-  // Catatan: JsBarcode hanya menerima elemen SVG (bukan DIV), jadi render ke <svg>.
+function bcAuto(){
+  const f=S.f;
+  return 'CATHLAB-'+(f.rm||'000000')+'-'+((f.tgl||'').replace(/-/g,'')||'00000000');
+}
+function bcVal(){return bcAuto()}
+/* Bangun markup SVG QR (inline & tajam pada resolusi cetak apa pun) */
+function bcSVGMarkup(cellSize,margin){
+  const q=qrcode(0,'M');
+  q.addData(bcVal());
+  q.make();
+  return q.createSvgTag({cellSize:cellSize,margin:margin,scalable:true});
+}
+/* Dipakai oleh seluruh template cetak */
+function bcPrintHTML(sizeMm,cellSize){
+  const mm=sizeMm||28;
   try{
-    box.innerHTML='<svg id="bcSvg" width="100%" height="56"></svg>';
-    JsBarcode('#bcSvg',v,{format:t,displayValue:true,fontSize:15,height:42,margin:6,lineColor:'#000',textMargin:2});
-    box.setAttribute('data-bc',v);box.setAttribute('data-bc-type',t);
-  }catch(x){
-    box.innerHTML='';
-    box.removeAttribute('data-bc');
-    err.textContent='Barcode gagal: '+(x.message||'format tidak didukung untuk nilai ini');
-  }
-}
-function bcUpdate(){
-  // barcode mengikuti No. RM / tanggal selama belum diubah manual
-  if(bcAutoStill())S.f.barcode=bcAuto();
-  const inp=document.querySelector('[data-k="barcode"]');
-  if(inp&&document.activeElement!==inp)inp.value=S.f.barcode||'';
-  const lbl=document.getElementById('bcTypeLbl');
-  if(lbl)lbl.textContent=bcType();
-  bcRender();
-}
-/* JsBarcode hanya bisa: (1) merender ke elemen DOM, atau (2) mengembalikan SVG
-   bila dipanggil sebagai JsBarcode(svgElement, value, opts) pada elemen svg.
-   Untuk HTML string kita buat elemen svg sekali, render ke situ, lalu ambil
-   outerHTML-nya supaya hasilnya benar-benar inline ( tajam saat dicetak ). */
-function bcSVGMarkup(value,opts){
-  const holder=document.createElementNS('http://www.w3.org/2000/svg','svg');
-  holder.setAttribute('width','240');holder.setAttribute('height','46');
-  const markup=JsBarcode(holder,value,opts);
-  return (typeof markup==='string'&&markup)?markup:holder.outerHTML;
-}
-function bcPrintHTML(){
-  try{
-    return '<div style="margin-top:6px;text-align:center">'+
-      bcSVGMarkup(bcVal(),{format:bcType(),displayValue:true,fontSize:11,height:38,margin:3,lineColor:'#000',textMargin:1})+
-      '</div>';
+    return '<div style="margin-top:6px;display:flex;flex-direction:column;align-items:center;gap:1px">'+
+      '<div style="width:'+mm+'mm;height:'+mm+'mm;line-height:0">'+bcSVGMarkup(cellSize||4,1)+'</div>'+
+      '<div style="font-size:8.5px;letter-spacing:.2px;text-align:center">'+esc(bcVal())+'</div>'+
+    '</div>';
   }catch(e){
-    return `<div style="font-size:10px;margin-top:6px">[${esc(bcVal())}]</div>`;
+    return `<div style="font-size:9px;margin-top:6px">[${esc(bcVal())}]</div>`;
   }
 }
 
