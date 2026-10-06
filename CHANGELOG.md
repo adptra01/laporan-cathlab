@@ -38,6 +38,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), Versi [SemVer]
 - Barcode hanya dirender pada hasil cetak/pratinjau (28×28 mm, SVG inline) di
   ketiga template: Laporan Lengkap, Ringkas, dan Epikrisis.
 - Ketergantungan JsBarcode diganti `qrcode-generator` 1.4.4 (MIT).
+- **Perbaikan:** `Perawat Sirkuler 2` dan `Monitoring` sebelumnya tidak
+  tercetak pada laporan. Ketiganya kini muncul di Laporan Lengkap, dan
+  ringkas/epikrisis memakai helper `sirkulerHTML()` yang hanya menampilkan
+  perawat sirkuler yang terisi.
 
 ### Ditambahkan
 - Halaman depan (`index.html`) sebagai pintu masuk pilihan form.

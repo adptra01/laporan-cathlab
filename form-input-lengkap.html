@@ -1426,8 +1426,9 @@ function printFull(){
       <tr><td>Diagnosis Pre</td><td colspan="5">: ${esc(f.diagnosaPre||'-')}</td></tr>
       <tr><td>Indikasi</td><td colspan="5">: ${esc(f.indikasi||'-')}</td></tr>
       <tr><td>Killip / CCS</td><td colspan="5">: ${esc(f.killip||'-')} / ${esc(f.ccs||'-')}</td></tr>
-      <tr><td>Operator</td><td>: ${esc(f.operator||'-')}</td><td>Asisten / Scrub</td><td>: ${esc(f.asisten||'-')}</td><td>Sirkuler</td><td>: ${esc(f.perawat||'-')}</td></tr>
-      <tr><td>Kolimator</td><td>: ${esc(f.kolim||'-')}</td><td>Dominansi</td><td>: ${esc(f.dom||'-')}</td><td>TIMI awal/akhir</td><td>: ${esc(f.timiPre||'-')} / ${esc(f.timiPost||'-')}</td></tr>
+      <tr><td>Operator</td><td>: ${esc(f.operator||'-')}</td><td>Asisten / Scrub</td><td>: ${esc(f.asisten||'-')}</td><td>Sirkuler 1</td><td>: ${esc(f.perawat||'-')}</td></tr>
+      <tr><td>Sirkuler 2</td><td>: ${esc(f.perawat2||'-')}</td><td>Monitoring</td><td>: ${esc(f.monitoring||'-')}</td><td>Kolimator</td><td>: ${esc(f.kolim||'-')}</td></tr>
+      <tr><td>Dominansi</td><td>: ${esc(f.dom||'-')}</td><td>TIMI awal/akhir</td><td>: ${esc(f.timiPre||'-')} / ${esc(f.timiPost||'-')}</td><td>Tanggal TTD</td><td>: ${f.ttdTgl?tgID(f.ttdTgl):'-'}</td></tr>
       <tr><td>Tanda Vital</td><td colspan="5">: TD ${esc(f.td||'-')} mmHg · HR ${esc(f.hr||'-')} bpm · RR ${esc(f.rr||'-')} · SpO₂ ${esc(f.spo2||'-')}% · Suhu ${esc(f.suhu||'-')}°C</td></tr>
       <tr><td>Kontras</td><td>: ${esc(f.kontras||'-')} ${esc(f.kontrasVol||'-')} cc</td><td>Radiasi</td><td>: ${esc(f.radiasi||'-')} mGy</td><td>Perdarahan</td><td>: ${esc(f.darah||'-')} cc</td></tr>
       <tr><td>Komplikasi</td><td colspan="5">: ${esc(f.komplikasi)}${S.f.komplikasiList.length?(' — '+esc(kompl)):''}${f.komplikasiCatatan?(' — '+esc(f.komplikasiCatatan)):''}</td></tr>
@@ -1454,6 +1455,13 @@ function printFull(){
   </section>`;
 }
 /* --- SUMMARY --- */
+/* Daftar perawat sirkuler yang terisi (1 dan/atau 2) */
+function sirkulerHTML(f){
+  const list=[['1',f.perawat],['2',f.perawat2]]
+    .filter(x=>String(x[1]||'').trim())
+    .map(x=>'Sirkuler '+x[0]+': '+esc(x[1]));
+  return list.length?list.join(' · '):'-';
+}
 function printSummary(){
   const f=S.f,dual=isDual(),phases=dual?['A','B']:['A'];
   const kompl=S.f.komplikasiList.length?S.f.komplikasiList.map(x=>x.replace('::',' — ')).join(', '):'-';
@@ -1468,6 +1476,7 @@ function printSummary(){
       <tr><td>Tanggal</td><td>: ${tgID(f.tgl)}</td><td>Jam</td><td>: ${esc(f.mulai||'-')} — ${esc(f.selesai||'-')}</td></tr>
       <tr><td>Diagnosis</td><td colspan="3">: ${esc(f.diagnosaPre||'-')}</td></tr>
       <tr><td>Operator</td><td colspan="3">: ${esc(f.operator||'-')}${f.asisten?' (asisten: '+esc(f.asisten)+')':''}</td></tr>
+      <tr><td>Perawat</td><td colspan="3">: ${sirkulerHTML(f)}</td></tr>
       <tr><td>Kontras / Radiasi</td><td colspan="3">: ${esc(f.kontras||'-')} ${esc(f.kontrasVol||'-')} cc / ${esc(f.radiasi||'-')} mGy</td></tr>
       <tr><td>Komplikasi</td><td colspan="3">: ${esc(f.komplikasi)}${S.f.komplikasiList.length?(' — '+esc(kompl)):''}</td></tr>
       <tr><td>Kesimpulan</td><td colspan="3">: <b>${esc(f.kesimpulan||'-')}</b></td></tr>
@@ -1505,6 +1514,7 @@ function printEpicrisis(){
       <tr><td style="border:0">Diagnosis</td><td style="border:0">: ${esc(f.diagnosaPre||'-')}</td></tr>
       <tr><td style="border:0">Tindakan</td><td style="border:0">: ${esc(f.jenis||'-')}</td></tr>
       <tr><td style="border:0">Operator</td><td style="border:0">: ${esc(f.operator||'-')}</td></tr>
+      <tr><td style="border:0">Asisten / Perawat</td><td style="border:0">: ${f.asisten?'Asisten: '+esc(f.asisten):''}${sirkulerHTML(f)!=='-'?' · '+sirkulerHTML(f):''}</td></tr>
       <tr><td style="border:0">Temuan</td><td style="border:0">: ${esc(f.kesimpulan||'-')}</td></tr>
       <tr><td style="border:0">Komplikasi</td><td style="border:0">: ${esc(f.komplikasi)}${S.f.komplikasiList.length?(' — '+esc(S.f.komplikasiList.map(x=>x.replace('::',' — ')).join(', '))):''}</td></tr>
       <tr><td style="border:0;vertical-align:top">Terapi</td><td style="border:0">: ${esc(f.obatPulang||'-')}</td></tr>
