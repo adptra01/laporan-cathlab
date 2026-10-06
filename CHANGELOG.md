@@ -52,22 +52,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), Versi [SemVer]
 
 ### Ditambahkan
 - Halaman depan (`index.html`) sebagai pintu masuk pilihan form.
-- `form-input-simple.html` — form laporan cathlab versi ringkas.
-- `form-input-lengkap.html` — form laporan cathlab versi lengkap (14 section,
-  timeline hemodinamik, registry obat & stent, komplikasi terstruktur, 3 template
-  cetak, ekspor/impor JSON, riwayat versi).
+- `form-input-lengkap.html` — form laporan cathlab utama (14 section,
+  timeline hemodinamik, registry alat, komplikasi terstruktur, 3 template
+  cetak, riwayat versi, integrasi SIMRS).
 - `form-guide.html` — tur interaktif memakai **Driver.js** di atas form asli.
 - `form-docs.html` — dokumentasi field lengkap dengan skenario error.
 - `form-walkthrough.html` — pengisian bertahap 7 step dengan validasi per step.
 - `simrs-guide.html` — panduan integrasi SIMRS (endpoint, pemetaan field,
   konfigurasi, pengujian koneksi, catatan keamanan).
-- **Barcode laporan** (Code 128/39/EAN13) menggantikan gambar tanda tangan,
-  dibuat otomatis dari No. RM + tanggal dan tercetak sebagai SVG inline.
+- **Barcode laporan** (QR otomatis) menggantikan gambar tanda tangan,
+  dibuat dari No. RM + tanggal dan tercetak sebagai SVG inline.
 - Integrasi master data **SIMRS**: `fetchPasien()` / `fetchDokter()`, konfigurasi
   `SIMRS_CONFIG`, pemetaan `FIELD_MAP`, normalisasi telepon & tanggal, timeout
   via `AbortController`, fallback data lokal, serta tombol **Uji koneksi**.
 - `js/form-schema.js` sebagai sumber tunggal definisi field + mesin validasi.
-- Driver.js dan JsBarcode di-vendor lokal (`js/lib`, `css/lib`) agar tidak
+- Driver.js dan qrcode-generator di-vendor lokal (`js/lib`, `css/lib`) agar tidak
   bergantung pada CDN.
 - `.nojekyll` agar GitHub Pages menyajikan berkas statis apa adanya.
 
