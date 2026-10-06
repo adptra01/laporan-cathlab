@@ -29,14 +29,8 @@
     }
   };
 
-  /* Parser URL query (?form=simple|lengkap) */
-  D.formFromQuery = function () {
-    try {
-      var m = location.search.match(/[?&]form=(simple|lengkap)/i);
-      return m ? m[1].toLowerCase() : 'lengkap';
-    } catch (e) { return 'lengkap'; }
-  };
-  D.formFile = function (form) { return form === 'simple' ? 'form-input-simple.html' : 'form-input-lengkap.html'; };
+  /* Form utama yang dipakai seluruh halaman dokumentasi */
+  D.formFile = function () { return 'form-input-lengkap.html'; };
 
   /* Guard: bungkus agar error tidak mematikan halaman */
   D.guard = function (fn, label) {

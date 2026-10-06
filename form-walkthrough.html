@@ -94,25 +94,25 @@
   var STEPS = [
     {
       id: 1, title: 'Identitas Pasien', goal: 'Kunci seluruh laporan: No. RM, nama, dan tanggal tindakan.',
-      keys: ['rm', 'nama', 'reg', 'lahir', 'jk', 'penjamin', 'dpjpMasuk', 'telp', 'dpjp']
+      keys: ['rm', 'nama', 'reg', 'lahir', 'jk', 'penjamin', 'dpjpMasuk', 'telp']
     },
     {
       id: 2, title: 'Jadwal & Jenis Tindakan', goal: 'Tentukan kapan tindakan dilakukan dan jenis pemeriksaan (menentukan jumlah diagram).',
-      keys: ['tgl', 'mulai', 'selesai', 'anestesi', 'kelas', 'ruang', 'jenis', 'labelPre', 'labelPost', 'tglMasuk', 'tglSelesai', 'masuk']
+      keys: ['tgl', 'mulai', 'selesai', 'anestesi', 'kelas', 'ruang', 'jenis', 'labelPre', 'labelPost', 'tglMasuk', 'tglSelesai']
     },
     {
-      id: 3, title: 'Diagnosis, Tim & Akses', goal: 'Tulis indikasi, lengkapi tim operator, dan catat lokasi akses puncture.',
-      keys: ['pre', 'diagnosaPre', 'post', 'indikasi', 'killip', 'ccs', 'alergi', 'keluhan',
-        'op', 'operator', 'operator2', 'fellow', 'resident', 'asisten', 'perawat', 'kolim', 'monitoring', 'akses', 'aksesTbl', 'sheath', 'kat_diag', 'kat_guide']
+      id: 3, title: 'Diagnosis, Tim & Akses', goal: 'Tulis indikasi, lengkapi tim operator (termasuk 2 perawat sirkuler), dan catat lokasi akses puncture.',
+      keys: ['diagnosaPre', 'indikasi', 'killip', 'ccs', 'alergi', 'keluhan',
+        'operator', 'asisten', 'perawat', 'perawat2', 'monitoring', 'kolim', 'aksesTbl']
     },
     {
       id: 4, title: 'Pemeriksaan Penunjang & Vital', goal: 'Dokumentasikan hasil lab/EKG/echo serta hemodinamik selama tindakan.',
       keys: ['consent', 'puasa', 'premedikasi', 'profilaksis', 'labHb', 'labPlt', 'labINR', 'labKreat', 'labGDS',
-        'labTrop', 'egk', 'echo', 'thorax', 'td', 'hr', 'rr', 'suhu', 'spo2', 'urine', 'dom', 'timiPre', 'timiPost', 'obatRutin', 'riwayat']
+        'labTrop', 'egk', 'echo', 'thorax', 'vitalTl', 'spo2', 'urine', 'dom', 'timiPre', 'timiPost', 'obatRutin', 'riwayat']
     },
     {
-      id: 5, title: 'Kontras, Obat & Stent', goal: 'Catat volume kontras, radiasi, obat yang diberikan, dan registry stent.',
-      keys: ['kontras', 'kontras_vol', 'kontrasVol', 'radiasi', 'darah', 'hep', 'ntg', 'medsTbl', 'stent', 'diagram']
+      id: 5, title: 'Kontras, Obat & Alat', goal: 'Catat volume kontras, radiasi, obat yang diberikan, dan registry alat (stent, balloon, wire, kateter).',
+      keys: ['kontras', 'kontrasVol', 'radiasi', 'darah', 'medsTbl', 'stent', 'deviceTypes', 'diagram']
     },
     {
       id: 6, title: 'Komplikasi & Hasil', goal: 'Nilai komplikasi, tulis narasi/kesimpulan, dan rencana pulang.',
@@ -121,7 +121,7 @@
     },
     {
       id: 7, title: 'Tembusan & Barcode', goal: 'Tentukan distribusi laporan dan barcode identifikasi yang ikut tercetak.',
-      keys: ['ttd_tgl', 'ttdTgl', 'ttd_nama', 'ttdNama', 'barcode', 'barcodeBox', 'tem']
+      keys: ['ttdTgl', 'ttdNama', 'barcode', 'barcodeBox', 'tem']
     }
   ];
 
@@ -304,7 +304,6 @@
       '<button class="btn" id="export" type="button">Unduh .json</button>' +
       '<button class="btn btn-ac" id="restart" type="button">Mulai ulang</button>' +
       '<a class="btn btn-ac" id="goForm" href="form-input-lengkap.html">Buka Form Lengkap</a>' +
-      '<a class="btn" id="goFormS" href="form-input-simple.html">Buka Form Simple</a>' +
       '</div>';
     renderBar();
     Docs.toast('Walkthrough selesai. Periksa bagian yang belum lengkap.', 'ok');

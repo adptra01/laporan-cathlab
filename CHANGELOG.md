@@ -4,6 +4,29 @@ Format: [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), Versi [SemVer]
 
 ## [Unreleased]
 
+### Revisi
+- **Form versi ringkas/simple dihapus** — proyek kini memakai satu form utama
+  (`form-input-lengkap.html`). Referensi, tautan navigasi, dan dokumentasi
+  disinkronkan ulang.
+- **Field Tim Operator** — menghapus `Operator 2`, `Fellow / Trainee`, dan
+  `Resident / PPDS`; menambahkan `Perawat Sirkuler 2` sehingga ada dua
+  perawat sirkuler (`perawat` dan `perawat2`).
+- **Tombol ✕ (hapus baris) diperbaiki** — sebelumnya tombol hapus pada tabel
+  akses, vital, obat, dan device tidak pernah bekerja karena atribut
+  `data-delAk`/`data-delVt`/`data-delMd`/`data-delSt` otomatis menjadi
+  lowercase oleh HTML sehingga `dataset.delSt` selalu `undefined`.
+  Sekarang ditulis `data-del-ak`/`-vt`/`-md`/`-st`, diberi konfirmasi,
+  penanda segmen ikut dibersihkan, dan kolom hapus dibuat sticky.
+- **Stent & Devices → Alat & Devices** dengan 16 tipe alat:
+  Stent (DES/BMS/DCB/Scaffold), Balloon (PTCA/Dilatasi), Balloon Occlusion,
+  Guide Wire (Kawat Pandu), Kateter Diagnostik, Kateter Guiding (Pengarah),
+  Kateter Extension (Bridging), Micro Catheter, Kateter IVUS/OCT,
+  Rotational Burr (Atherectomy), Catheter Parking (Wire), Closure Device,
+  dan Lain-lain. Hanya tipe **Stent** yang menandai segmen pada diagram.
+- **Nama segmen tanpa kode angka** pada daftar pilihan dan laporan cetak
+  (mis. “LAD mid”, bukan “7 LAD mid”). Kode AHA tetap dipakai sebagai kunci
+  internal diagram.
+
 ### Ditambahkan
 - Halaman depan (`index.html`) sebagai pintu masuk pilihan form.
 - `form-input-simple.html` — form laporan cathlab versi ringkas.

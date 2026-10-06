@@ -64,10 +64,6 @@
   </div>
 
   <div class="tourbar">
-    <div class="switch">
-      <a href="form-guide.html?form=lengkap" id="swL" class="on">Form Lengkap</a>
-      <a href="form-guide.html?form=simple" id="swS">Form Simple</a>
-    </div>
     <span class="badge-live" id="live">Tour nonaktif</span>
     <div class="progress"><i id="prog"></i></div>
     <div class="tinfo" id="tinfo">0 / 0</div>
@@ -113,9 +109,7 @@
   'use strict';
   var $ = Docs.$, esc = Docs.esc;
 
-  var form = Docs.formFromQuery();
-  var formCode = (form === 'simple') ? 'S' : 'L';
-  var file = Docs.formFile(form);
+  var file = Docs.formFile();
   var frame = $('#frame');
   var frameCtx = null;        // {doc, win} bila iframe bisa diakses
   var driverReady = false;    // driver.js sudah termuat di dalam iframe
@@ -126,20 +120,13 @@
 
   /* ---------------- selector per field ---------------- */
   var SEL = {
-    simple: {
-      akses: '#chsAkses', diagram: '#dg', stent: '#st', medsTbl: '#st',
-      komplikasi: '#st', komplikasiList: '#st', komplikasiCatatan: '#st',
-      barcodeBox: '#barcodeBox', tem: '#st', vitalTl: '#st'
-    },
-    lengkap: {
-      akses: '#aksesTbl', diagram: '#dg', stent: '#stentTbl',
-      medsTbl: '#medsTbl', komplikasi: '[data-k="komplikasi"]',
-      komplikasiList: '[data-compl]', komplikasiCatatan: '[data-k="komplikasiCatatan"]',
-      barcodeBox: '#barcodeBox', tem: '[data-tem]', vitalTl: '#vitalTl'
-    }
+    akses: '#aksesTbl', diagram: '#dg', stent: '#stentTbl',
+    medsTbl: '#medsTbl', komplikasi: '[data-k="komposisi"]',
+    komplikasiList: '[data-compl]', komplikasiCatatan: '[data-k="komplikasiCatatan"]',
+    barcodeBox: '#barcodeBox', tem: '[data-tem]', vitalTl: '#vitalTl'
   };
   function selectorFor(f) {
-    if (SEL[form] && SEL[form][f.k]) return SEL[form][f.k];
+    if (SEL[f.k]) return SEL[f.k];
     return '[data-k="' + f.k + '"]';
   }
 
@@ -148,7 +135,6 @@
     steps = [];
     CathlabSchema.SECTIONS.forEach(function (sec) {
       sec.fields.forEach(function (f) {
-        if (!f.f || f.f.indexOf(formCode) < 0) return;
         steps.push({ section: sec, field: f, sel: selectorFor(f), title: f.label.replace(/\s*\*$/, '') });
       });
     });
@@ -286,8 +272,6 @@
     $('#tiBody').innerHTML =
       '<dl class="kv">' +
       '<dt>Field (kunci)</dt><dd><code>' + esc(s.field.k) + '</code></dd>' +
-      '<dt>Form</dt><dd>' + (s.field.f || ['S', 'L']).map(function (x) {
-        return '<span class="tag tag-' + x + '">' + (x === 'S' ? 'Simple' : 'Lengkap') + '</span>'; }).join(' ') + '</dd>' +
       '<dt>Spesifikasi</dt><dd>' + specText(s.field) + '</dd>' +
       '<dt>Contoh input</dt><dd><code>' + esc(s.field.example || '—') + '</code></dd>' +
       '</dl>' +
@@ -426,8 +410,6 @@
     frame.src = file;
     $('#linkForm').href = file;
     $('#fallbackLink').href = file;
-    $('#swL').classList.toggle('on', form === 'lengkap');
-    $('#swS').classList.toggle('on', form === 'simple');
     $('#tinfo').textContent = '0 / ' + steps.length;
     start();
   }

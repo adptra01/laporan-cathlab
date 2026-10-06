@@ -10,12 +10,38 @@ dokumentasi, panduan interaktif, dan panduan integrasi SIMRS.
 | Halaman | File | Fungsi |
 |---|---|---|
 | Halaman Depan | `index.html` | Pintu masuk, memilih versi form atau dokumentasi |
-| Form Simple | `form-input-simple.html` | Form ringkas: identitas, akses, vital, diagram koroner, stent, barcode, cetak A4 |
-| Form Lengkap | `form-input-lengkap.html` | Form lengkap (14 section): timeline vital, registry obat & stent, komplikasi terstruktur, 3 template cetak, ekspor/impor JSON, riwayat, integrasi SIMRS |
-| Interactive Form Guide | `form-guide.html` | Tur Driver.js di atas form asli: highlight field, tooltip, validasi real-time, Next/Prev/Skip |
+| Form Laporan | `form-input-lengkap.html` | Form lengkap (14 section): timeline vital, registry obat & stent, komplikasi terstruktur, 3 template cetak, ekspor/impor JSON, riwayat, integrasi SIMRS |
+| Interactive Form Guide | `form-guide.html` | Tur Driver.js di atas form: highlight field, tooltip, validasi real-time, Next/Prev/Skip |
 | Dokumentasi Form | `form-docs.html` | Referensi tiap field: tipe data, format, regex, validasi, contoh, error |
 | Step-by-Step Walkthrough | `form-walkthrough.html` | Pengisian 7 step: progress, validasi per step, ringkasan + JSON |
 | Integrasi SIMRS | `simrs-guide.html` | Master data pasien & dokter: endpoint, pemetaan field, konfigurasi, pengujian |
+
+## Alat & Devices (Stent & Devices)
+
+Tabel alat di section 10 mencatat semua perangkat yang dipakai saat tindakan.
+Pilihan tipe mengikuti istilah standar cathlab/PCI:
+
+| Kategori | Pilihan |
+|---|---|
+| Stent | Stent (DES), Stent (BMS), Stent (DCB), Stent Scaffold |
+| Balloon | Balloon (PTCA/Dilatasi), Balloon Occlusion |
+| Kawat | Guide Wire (Kawat Pandu) |
+| Kateter | Kateter Diagnostik, Kateter Guiding (Pengarah), Kateter Extension (Bridging), Micro Catheter, Kateter IVUS/OCT |
+| Lain | Rotational Burr (Atherectomy), Catheter Parking (Wire), Closure Device, Lain-lain |
+
+Hanya device bertipe **Stent** yang otomatis menandai segmen pada diagram POST
+sebagai "Stent"; balloon/wire/kateter tidak mengubah status segmen.
+
+Nama segmen pada daftar pilihan dan laporan cetak **tanpa kode angka AHA**
+(mis. “LAD mid”, bukan “7 LAD mid”). Kode AHA tetap dipakai sebagai kunci internal.
+
+Tombol **✕** pada setiap baris tabel (akses, vital, obat, alat) menghapus baris
+dengan konfirmasi; penanda segmen ikut dibersihkan.
+
+## Tim Operator
+
+Field yang tersedia: Dokter Operator, Asisten/Scrub, **Perawat Sirkuler 1**,
+**Perawat Sirkuler 2**, Monitoring, dan Kolimator/Radiografer.
 
 ## Barcode (pengganti tanda tangan gambar)
 

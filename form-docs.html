@@ -12,9 +12,6 @@
   border-radius: 6px; font: inherit; background: #fff;
 }
 .toolbar input[type=search]:focus { outline: 2px solid var(--ac); outline-offset: -1px; }
-.filters { display: flex; gap: 4px; }
-.filters button { font-size: 12px; padding: 6px 11px; border: 1px solid var(--ln); border-radius: 14px; background: #fff; cursor: pointer; font-family: inherit; }
-.filters button.on { background: var(--ac); border-color: var(--ac); color: #fff; font-weight: 600; }
 
 .toc { position: sticky; top: 62px; z-index: 5; }
 .toc a {
@@ -65,16 +62,11 @@
 <main>
   <div class="page-head">
     <h1>Dokumentasi Form &amp; Bantuan Kontekstual</h1>
-    <p>Referensi lengkap setiap field pada <code>form-input-simple.html</code> dan <code>form-input-lengkap.html</code> — deskripsi, tipe data, format yang diterima, validasi, contoh input, dan skenario error.</p>
+    <p>Referensi lengkap setiap field pada <code>form-input-lengkap.html</code> — deskripsi, tipe data, format yang diterima, validasi, contoh input, dan skenario error.</p>
   </div>
 
   <div class="toolbar">
     <input type="search" id="q" placeholder="Cari field… (mis. stent, kontras, rm, tanggal)">
-    <div class="filters" id="filters">
-      <button data-f="all" class="on">Semua</button>
-      <button data-f="simple">Form Simple</button>
-      <button data-f="lengkap">Form Lengkap</button>
-    </div>
     <button class="btn" id="expandAll">Buka semua</button>
     <button class="btn" id="collapseAll">Tutup semua</button>
   </div>
@@ -93,7 +85,7 @@
 (function () {
   'use strict';
   var $ = Docs.$, esc = Docs.esc;
-  var filter = 'all', query = '';
+  var query = '';
 
   function fmtSpec(f) {
     var rows = [];
@@ -130,32 +122,47 @@
 
     var extra = '';
     if (f.k === 'diagram') {
-      extra = '<h4>Segmen yang dapat ditandai</h4><div class="tw"><table><thead><tr><th>Form Simple</th><th>Form Lengkap (AHA)</th></tr></thead><tbody><tr>' +
-        '<td>' + (sec.segmentsSimple || []).map(function (s) { return '<code>' + esc(s) + '</code>'; }).join(', ') + '</td>' +
-        '<td>' + (sec.segmentsLengkap || []).map(function (s) { return '<code>' + esc(s[0] + ' ' + s[1]) + '</code>'; }).join(', ') + '</td></tr></tbody></table></div>' +
+      extra = '<h4>Segmen AHA 16-segmen</h4><div class="tw"><table><thead><tr><th>Kode AHA</th><th>Nama (ditampilkan di form)</th></tr></thead><tbody>' +
+        (sec.segmentsLengkap || []).map(function (s) { return '<tr><td><code>' + esc(s[0]) + '</code></td><td>' + esc(s[1]) + '</td></tr>'; }).join('') +
+        '</tbody></table></div>' +
+        '<p class="small muted">Kode AHA dipakai sebagai kunci internal diagram, tetapi <b>tidak ditampilkan</b> pada daftar pilihan segmen maupun laporan cetak (mis. “7 LAD mid” ditulis “LAD mid”).</p>' +
         '<h4>Status &amp; warna</h4><div class="tw"><table><thead><tr><th>Status</th><th>Warna diagram</th><th>Peran</th></tr></thead><tbody>' +
         '<tr><td><code>normal</code> Normal</td><td>hijau</td><td>segumen tanpa lesi</td></tr>' +
         '<tr><td><code>stenosis</code> Stenosis</td><td>merah putus-putus</td><td>perlu derajat (%)</td></tr>' +
-        '<tr><td><code>stent</code> Stent</td><td>biru tebal</td><td>otomatis dari tabel stent</td></tr>' +
+        '<tr><td><code>stent</code> Stent</td><td>biru tebal</td><td>otomatis bila registry device bertipe Stent</td></tr>' +
         '<tr><td><code>thrombus</code> Trombus</td><td>jingga putus-putus rapat</td><td>catatan biasanya di kolom Catatan</td></tr>' +
         '<tr><td><code>cto</code> Oklusi total</td><td>merah tua bertitik</td><td>tidak ada aliran distal</td></tr>' +
         '</tbody></table></div>';
     }
     if (f.k === 'stent') {
-      extra = '<h4>Kolom tabel stent</h4><div class="tw"><table><thead><tr><th>Kolom</th><th>Tipe</th><th>Contoh</th><th>Catatan</th></tr></thead><tbody>' +
-        '<tr><td>Segmen</td><td>select (daftar segmen)</td><td><code>7 LAD mid</code></td><td>Lengkap memakai kode AHA, Simple memakai nama</td></tr>' +
-        '<tr><td>Tipe</td><td>select</td><td><code>DES</code> / <code>BMS</code> / <code>DCB</code></td><td>Lengkap menambah Scaffold &amp; Lain</td></tr>' +
-        '<tr><td>Merek</td><td>text</td><td><code>Eternia</code></td><td>Ikut tampil di catatan segmen diagram</td></tr>' +
+      extra = '<h4>Kolom tabel alat / device</h4><div class="tw"><table><thead><tr><th>Kolom</th><th>Tipe</th><th>Contoh</th><th>Catatan</th></tr></thead><tbody>' +
+        '<tr><td>Tipe</td><td>select</td><td><code>Stent (DES)</code>, <code>Balloon (PTCA/Dilatasi)</code>, <code>Kateter Guiding (Pengarah)</code></td><td>16 pilihan alat; hanya tipe <b>Stent</b> yang menandai segmen pada diagram</td></tr>' +
+        '<tr><td>Segmen</td><td>select (daftar segmen)</td><td><code>LAD mid</code></td><td>Ditampilkan tanpa kode angka</td></tr>' +
+        '<tr><td>Merek</td><td>text</td><td><code>Eternia</code></td><td>Ikut tampil di catatan segmen diagram bila tipe Stent</td></tr>' +
         '<tr><td>Dia × Panjang</td><td>text</td><td><code>3.0</code> × <code>24</code></td><td>Satuan mm</td></tr>' +
         '<tr><td>Tekanan / Post-dil</td><td>text</td><td><code>10</code> / <code>12</code></td><td>Satuan atm</td></tr>' +
-        '<tr><td>No. Lot &amp; Exp.</td><td>text / date</td><td><code>ETN2024A</code></td><td>Hanya di form Lengkap</td></tr>' +
-        '<tr><td>Direct</td><td>checkbox</td><td><code>✓</code></td><td>Hanya di form Lengkap; memengaruhi narasi</td></tr>' +
+        '<tr><td>No. Lot &amp; Exp.</td><td>text / date</td><td><code>ETN2024A</code></td><td>Pelacakan alat</td></tr>' +
+        '<tr><td>Direct</td><td>checkbox</td><td><code>✓</code></td><td>Hanya relevan untuk stent; memengaruhi narasi</td></tr>' +
+        '<tr><td>✕</td><td>button</td><td>—</td><td>Menghapus baris dengan konfirmasi; penanda segmen ikut dibersihkan</td></tr>' +
+        '</tbody></table></div>' +
+        '<h4>Daftar tipe device</h4><div class="tw"><table><tbody>' +
+        ['Stent (DES)','Stent (BMS)','Stent (DCB)','Stent Scaffold','Balloon (PTCA/Dilatasi)','Balloon Occlusion','Guide Wire (Kawat Pandu)','Kateter Diagnostik','Kateter Guiding (Pengarah)','Kateter Extension (Bridging)','Micro Catheter','Kateter IVUS/OCT','Rotational Burr (Atherectomy)','Catheter Parking (Wire)','Closure Device','Lain-lain'].map(function (t) {
+          return '<tr><td><code>' + esc(t) + '</code></td><td class="small muted">' + esc(deviceNote(t)) + '</td></tr>';
+        }).join('') +
+        '</tbody></table></div>';
+    }
+    if (f.k === 'deviceTypes') {
+      extra = '<h4>Istilah</h4><div class="tw"><table><tbody>' +
+        '<tr><td><code>Balloon (PTCA/Dilatasi)</code></td><td>balloon dilatasi koroner (PTCA balloon / balloon dilatation catheter) untuk preparasi dan post-dilatasi lesi</td></tr>' +
+        '<tr><td><code>Guide Wire (Kawat Pandu)</code></td><td>kawat pemandu 0.014&quot;–0.018&quot; yang memandu kateter/balloon melewati lesi</td></tr>' +
+        '<tr><td><code>Kateter Diagnostik</code></td><td>diagnostic catheter untuk angiografi diagnostik (mis. TIG, JL/JR)</td></tr>' +
+        '<tr><td><code>Kateter Guiding (Pengarah)</code></td><td>guiding catheter (GC) yang menjadi jalur pengiriman balloon/stent</td></tr>' +
+        '<tr><td><code>Kateter Extension (Bridging)</code></td><td>guide extension catheter (mis. GuideLiner, GuideZilla) untuk menambah backup support pada lesi CTO/kompleks</td></tr>' +
         '</tbody></table></div>';
     }
     if (f.k === 'akses') {
-      extra = '<h4>Lokasi akses</h4><div class="tw"><table><thead><tr><th>Simple</th><th>Lengkap</th></tr></thead><tbody><tr>' +
-        '<td>Radialis kanan · Radialis kiri · Brachialis · Femoral kanan · Femoral kiri</td>' +
-        '<td>Radialis kanan · Radialis kiri · Brachialis kanan · Brachialis kiri · Femoral kanan · Femoral kiri</td></tr></tbody></table></div>';
+      extra = '<h4>Lokasi akses</h4><p class="small">Radialis kanan · Radialis kiri · Brachialis kanan · Brachialis kiri · Femoral kanan · Femoral kiri</p>' +
+        '<p class="small muted">Tabel mendukung lebih dari satu lokasi akses pada satu tindakan.</p>';
     }
 
     return '<details class="fieldset" data-keys="' + esc((f.k + ' ' + f.label + ' ' + (f.example || '')).toLowerCase()) + '"' + (f.required ? ' open' : '') + '>' +
@@ -167,7 +174,6 @@
       '<div class="tw"><table><tbody>' +
       spec.map(function (r) { return '<tr><td>' + esc(r[0]) + '</td><td>' + r[1] + '</td></tr>'; }).join('') +
       '<tr><td>Validasi</td><td>' + esc(validationText(f)) + '</td></tr>' +
-      '<tr><td>Tersedia di</td><td>' + (f.f || ['S', 'L']).map(function (x) { return '<span class="tag tag-' + x + '">' + (x === 'S' ? 'Simple' : 'Lengkap') + '</span>'; }).join(' ') + '</td></tr>' +
       '<tr><td>Contoh input</td><td><div class="ex">' + esc(f.example || '—') + '</div></td></tr>' +
       '</tbody></table></div>' +
       (f.tips ? '<div class="callout">💡 <b>Tips:</b> ' + esc(f.tips) + '</div>' : '') +
@@ -175,6 +181,28 @@
       '<h4>Error messages (skenario validasi gagal)</h4>' + errs +
       extra +
       '</div></details>';
+  }
+
+  function deviceNote(t) {
+    var map = {
+      'Stent (DES)': 'stent drug-eluting',
+      'Stent (BMS)': 'stent bare-metal',
+      'Stent (DCB)': 'drug-coated balloon',
+      'Stent Scaffold': 'bioresorbable scaffold',
+      'Balloon (PTCA/Dilatasi)': 'balloon dilatasi koroner',
+      'Balloon Occlusion': 'balloon oklusi distal (Rendezvous)',
+      'Guide Wire (Kawat Pandu)': 'kawat pemandu',
+      'Kateter Diagnostik': 'diagnostic catheter (angiografi)',
+      'Kateter Guiding (Pengarah)': 'guiding catheter jalur PCI',
+      'Kateter Extension (Bridging)': 'guide extension catheter',
+      'Micro Catheter': 'micro catheter navigasi distal',
+      'Kateter IVUS/OCT': 'kateter imaging intravaskular',
+      'Rotational Burr (Atherectomy)': 'rotational atherectomy',
+      'Catheter Parking (Wire)': 'wire parking / distal protection',
+      'Closure Device': 'closure device lokasi akses',
+      'Lain-lain': 'alat lain di luar daftar'
+    };
+    return map[t] || '';
   }
 
   function commonMistake(f) {
@@ -194,8 +222,6 @@
 
     CathlabSchema.SECTIONS.forEach(function (sec) {
       var fields = sec.fields.filter(function (f) {
-        var inForm = (filter === 'all') || (f.f && f.f.indexOf(filter) >= 0);
-        if (!inForm) return false;
         if (!q) return true;
         var hay = (f.k + ' ' + f.label + ' ' + (f.example || '') + ' ' + (f.tips || '')).toLowerCase();
         return hay.indexOf(q) >= 0;
@@ -207,8 +233,7 @@
       html += '<div class="card doc" id="' + sec.id + '">' +
         '<h2><span class="n">' + sec.n + '</span>' + esc(sec.title) + '</h2>' +
         '<p class="hint">' + esc(sec.desc) + '</p>' +
-        '<p class="small muted">Judul pada form: Simple → <b>' + esc(sec.simpleTitle || sec.title) + '</b>' +
-        (sec.lengkapTitle ? ' · Lengkap → <b>' + esc(sec.lengkapTitle) + '</b>' : '') + '</p>' +
+        (sec.lengkapTitle ? '<p class="small muted">Judul pada form: <b>' + esc(sec.lengkapTitle) + '</b></p>' : '') +
         fields.map(function (f) { return fieldBlock(f, sec); }).join('') +
         '</div>';
     });
@@ -220,12 +245,6 @@
   }
 
   $('#q').addEventListener('input', Docs.guard(function (e) { query = e.target.value; render(); }, 'pencarian'));
-  $('#filters').addEventListener('click', Docs.guard(function (e) {
-    var b = e.target.closest('button[data-f]'); if (!b) return;
-    filter = b.dataset.f;
-    Docs.$$('#filters button').forEach(function (x) { x.classList.toggle('on', x === b); });
-    render();
-  }, 'filter form'));
   $('#expandAll').onclick = Docs.guard(function () { Docs.$$('details.fieldset').forEach(function (d) { d.open = true; }); }, 'buka semua');
   $('#collapseAll').onclick = Docs.guard(function () { Docs.$$('details.fieldset').forEach(function (d) { d.open = false; }); }, 'tutup semua');
 

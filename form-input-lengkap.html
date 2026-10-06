@@ -90,6 +90,15 @@ th{background:#f5f7f9;font-weight:600;color:var(--mu);font-size:11px;text-transf
 tr:last-child td{border-bottom:0}
 td input,td select{padding:4px 6px;font-size:12px;min-width:50px}
 td.tight{white-space:nowrap;width:1%}
+/* kolom hapus selalu terlihat saat tabel digulir horizontal */
+td.tight,th.del{position:sticky;right:0;background:var(--card);z-index:2;box-shadow:-1px 0 0 var(--ln)}
+thead th.del{background:#f5f7f9}
+tbody tr:hover td.tight{background:var(--card2)}
+.del-btn{width:26px;height:26px;padding:0;border-radius:6px;color:var(--err);border-color:var(--ln);
+  background:#fff;font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.del-btn:hover{background:#fef2f2;border-color:var(--err);color:var(--err)}
+.del-btn:focus-visible{outline:2px solid var(--err);outline-offset:1px}
+.tl .vrow .del-btn{width:26px;height:26px}
 
 .tl{display:flex;flex-direction:column;gap:6px}
 .tl .vrow{display:grid;grid-template-columns:90px 1fr 1fr 1fr 1fr 1fr 40px;gap:6px;align-items:center}
@@ -265,13 +274,50 @@ const MED_TPL={
   clopidogrel:{nama:'Clopidogrel',dosis:'300 mg',rute:'PO'}
 };
 
+/* ---------- DEVICE / ALAT yang dipakai pada tindakan ----------
+   Penamaan mengikuti istilah standar cathlab/PCI:
+   - Balloon (PTCA/balloon dilatasi)
+   - Guide Wire (kawat pemandu)
+   - Kateter Diagnostik (diagnostic catheter)
+   - Kateter Guiding / Pengarah (guiding catheter)
+   - Kateter Extension / Bridging (guide extension catheter)
+   - Micro catheter, IVUS/OCT catheter, Rotational burr, dll.
+   Kolom "keterangan" menjelaskan asal nama produk.                      */
+const DEVICE_TYPES=[
+  'Stent (DES)',                    // stent drug-eluting
+  'Stent (BMS)',                    // stent bare-metal
+  'Stent (DCB)',                    // drug-coated balloon
+  'Stent Scaffold',                 // bioresorbable / scaffold
+  'Balloon (PTCA/Dilatasi)',        // balloon untuk mel islekan lesi
+  'Balloon Occlusion',              // balloon oklusi distal untuk Rendezvous
+  'Guide Wire (Kawat Pandu)',       // kawat pemandu 0.014"/0.018"
+  'Kateter Diagnostik',             // untuk angiografi diagnostik (TIG/JL/JR)
+  'Kateter Guiding (Pengarah)',      // guiding catheter untuk PCI
+  'Kateter Extension (Bridging)',   // guide extension: GuideLiner/GuideZilla
+  'Micro Catheter',                 // untuk navigasi distal / CTO
+  'Kateter IVUS/OCT',               // imaging intravaskular
+  'Rotational Burr (Atherectomy)',  // rotablator
+  'Catheter Parking (Wire)',        // distal protection / wire parking
+  'Closure Device',                 // closuredevice akses
+  'Lain-lain'
+];
+/* Kolom yang relevan per tipe device */
+const DEVICE_FIELDS={
+  stent:['seg','merek','dia','pan','tek','pd','lot','exp','direct'],
+  balloon:['seg','merek','dia','pan','tek','pd'],
+  wire:['seg','merek','dia'],
+  catheter:['merek','dia','pan','seg'],
+  imaging:['merek','dia'],
+  other:['merek','seg']
+};
+
 const blank=()=>({
   v:3,
   f:{rm:'',nama:'',reg:'',lahir:'',jk:'',umur:'',alamat:'',telp:'',penjamin:'BPJS Kesehatan',
     tglMasuk:today(),ruang:'Cathlab 1',kelas:'',dpjpMasuk:'',
     tgl:today(),mulai:nowTime(),selesai:'',tglSelesai:'',anestesi:'',
     jenis:'PCI / PPCI',labelPre:'PRE PCI',labelPost:'POST PCI',
-    operator:'',operator2:'',fellow:'',resident:'',asisten:'',perawat:'',kolim:'',monitoring:'',
+    operator:'',asisten:'',perawat:'',perawat2:'',kolim:'',monitoring:'',
     diagnosaPre:'',indikasi:'',keluhan:'',riwayat:'',obatRutin:'',alergi:'-',
     consent:'Ya',puasa:'Ya',labHb:'',labPlt:'',labINR:'',labKreat:'',labGDS:'',labTrop:'',egk:'',echo:'',thorax:'',
     premedikasi:'',profilaksis:'',
@@ -549,12 +595,10 @@ function sec_admisi(){
 function sec_tim(){
   return sec_wrap('s3','Tim Operator & Peran','Nama tersimpan otomatis dan muncul sebagai saran.',
     `<div class="g">
-      ${fd('operator','Dokter Operator *')}
-      ${fd('operator2','Operator 2')}
-      ${fd('fellow','Fellow / Trainee')}
-      ${fd('resident','Resident / PPDS')}
-      ${fd('asisten','Asisten / Scrub')}
-      ${fd('perawat','Perawat Sirkuler')}
+      ${fd('operator','Dokter Operator *','text','','w2')}
+      ${fd('asisten','Asisten / Scrub','text','','w2')}
+      ${fd('perawat','Perawat Sirkuler 1')}
+      ${fd('perawat2','Perawat Sirkuler 2')}
       ${fd('monitoring','Monitoring')}
       ${fd('kolim','Kolimator / Radiografer')}
     </div>`);
@@ -640,11 +684,15 @@ function sec_diagram(){
     `<div class="dgw" id="dg"></div>`);
 }
 function sec_stent(){
-  return sec_wrap('s10','Stent & Devices','Registry lengkap dengan lot dan masa berlaku.',
+  return sec_wrap('s10','Alat & Devices','Registry alat yang dipakai: stent, balloon, guide wire, kateter (diagnostik, guiding, extension), dan lainnya. Nama segmen ditampilkan tanpa kode angka AHA.',
     `<div class="tw" style="margin-bottom:10px"><table id="stentTbl">
-      <thead><tr><th>Segmen</th><th>Tipe</th><th>Merek</th><th>Dia (mm)</th><th>Panjang (mm)</th><th>Tekanan (atm)</th><th>Post-dil (atm)</th><th>No. Lot</th><th>Exp.</th><th>Direct</th><th></th></tr></thead>
+      <thead><tr><th>Tipe</th><th>Segmen</th><th>Merek</th><th>Dia (mm)</th><th>Panjang (mm)</th><th>Tekanan (atm)</th><th>Post-dil (atm)</th><th>No. Lot</th><th>Exp.</th><th>Direct</th><th class="del">Hapus</th></tr></thead>
       <tbody></tbody></table></div>
-    <button data-a="addStent" class="b2" type="button">+ Tambah Stent/Device</button>`);
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button data-a="addStent" class="b2" type="button">+ Tambah Device</button>
+      ${DEVICE_TYPES.slice(0,4).map(t=>`<button data-a="addStentT" data-t="${esc(t)}" type="button" class="btn">+ ${esc(t)}</button>`).join('')}
+      <button data-a="addStentMore" type="button" class="btn">+ Jenis lain…</button>
+    </div>`);
 }
 function sec_kompl(){
   return sec_wrap('s11','Komplikasi & Adverse Events','Centang semua yang terjadi.',
@@ -787,7 +835,7 @@ function attachAkses(){
     <td><input data-ak="${i}" data-c="lokasi" value="${esc(a.lokasi||'')}" placeholder="detail"></td>
     <td><select data-ak="${i}" data-c="anestesi">${['Lidokain 2%','Lidokain 1%','Bupivakain','Lain'].map(x=>`<option ${x===a.anestesi?'selected':''}>${x}</option>`).join('')}</select></td>
     <td><input data-ak="${i}" data-c="kompl" value="${esc(a.kompl||'-')}"></td>
-    <td class="tight"><button data-delAk="${i}" type="button">✕</button></td>
+    <td class="tight"><button class="del-btn" data-del-ak="${i}" type="button" title="Hapus baris" aria-label="Hapus baris akses">✕</button></td>
   </tr>`).join('')||`<tr><td colspan="6" style="text-align:center;color:var(--mu);padding:12px">Belum ada akses.</td></tr>`;
 }
 function attachVitals(){
@@ -800,7 +848,7 @@ function attachVitals(){
     <input data-vt="${i}" data-c="rr" value="${esc(v.rr||'')}">
     <input data-vt="${i}" data-c="spo2" value="${esc(v.spo2||'')}">
     <input data-vt="${i}" data-c="suhu" value="${esc(v.suhu||'')}">
-    <button data-delVt="${i}" type="button" title="Hapus">✕</button>
+    <button class="del-btn" data-del-vt="${i}" type="button" title="Hapus baris" aria-label="Hapus baris vital">✕</button>
   </div>`).join('');
   tl.innerHTML=H+R;
 }
@@ -812,27 +860,66 @@ function attachMeds(){
     <td><input data-md="${i}" data-c="dosis" value="${esc(m.dosis||'')}" style="width:80px"></td>
     <td><input data-md="${i}" data-c="rute" value="${esc(m.rute||'')}" style="width:70px"></td>
     <td><input data-md="${i}" data-c="ket" value="${esc(m.ket||'')}"></td>
-    <td class="tight"><button data-delMd="${i}" type="button">✕</button></td>
+    <td class="tight"><button class="del-btn" data-del-md="${i}" type="button" title="Hapus baris" aria-label="Hapus baris obat">✕</button></td>
   </tr>`).join('')||`<tr><td colspan="6" style="text-align:center;color:var(--mu);padding:12px">Belum ada obat.</td></tr>`;
+}
+/* Nama segmen tanpa kode angka — mis. "7 LAD mid" → "LAD mid".
+   Nilai tetap memakai "kode+nama" sebagai kunci internal diagram. */
+/* Nama segmen tanpa kode angka — mis. "7 LAD mid" → "LAD mid".
+   Nilai tetap memakai "kode+nama" sebagai kunci internal diagram. */
+const segOptions=(sel)=>SEG.map(([code,name])=>{
+  const val=code+' '+name;
+  // Tampilkan nama saja tanpa kode angka ("7 LAD mid" → "LAD mid")
+  return `<option value="${esc(val)}" ${sel===val?'selected':''}>${esc(name)}</option>`;
+}).join('');
+/* Tandai segmen pada diagram POST sesuai tipe device.
+   Hanya stent yang berstatus "stent"; balloon/wire/kateter tidak mengubah
+   status segmen agar diagram tetap merepresentasikan kondisi pembuluh darah. */
+function applyDeviceToDiagram(i){
+  const d=S.stents[i];if(!d)return;
+  const kode=segKeyOf(d.seg);
+  // bersihkan penanda lama milik device ini
+  if(d._marked){
+    const cur=S.seg.B[d._marked];
+    if(cur&&cur._byDevice===i)delete S.seg.B[d._marked];
+    d._marked=null;
+  }
+  if(!kode||!isStentType(d.tipe))return;
+  const note=[d.merek,d.dia&&d.pan?d.dia+'x'+d.pan:''].filter(Boolean).join(' ').trim();
+  S.seg.B[kode]={s:'stent',p:'',n:note,_byDevice:i};
+  d._marked=kode;
+}
+function isStentType(t){return /^Stent/i.test(String(t||''))}
+function segKeyOf(seg){
+  const s=String(seg||'').trim();
+  if(!s)return null;
+  const code=s.split(' ')[0],name=s.split(' ').slice(1).join(' ');
+  const found=SEG.find(x=>x[0]===code&&x[1]===name);
+  return found?segKey(found[0],found[1]):null;
+}
+/* Nama segmen tanpa kode angka, mis. "7 LAD mid" → "LAD mid" */
+function segNameOf(seg){
+  const k=segKeyOf(seg);
+  if(!k)return String(seg||'').trim();
+  const f=SEG.find(x=>segKey(x[0],x[1])===k);
+  return f?f[1]:String(seg||'').trim();
 }
 function attachStent(){
   const tbl=$('#stentTbl');if(!tbl)return;
   tbl.querySelector('tbody').innerHTML=S.stents.map((s,i)=>`<tr>
-    <td><select data-st="${i}" data-c="seg">${SEG.map(([code,name])=>{
-      const val=code+' '+name;
-      return `<option value="${esc(val)}" ${s.seg===val?'selected':''}>${esc(code)} ${esc(name)}</option>`;
-    }).join('')}</select></td>
-    <td><select data-st="${i}" data-c="tipe">${['DES','BMS','DCB','Scaffold','Lain'].map(x=>`<option ${x===s.tipe?'selected':''}>${x}</option>`).join('')}</select></td>
-    <td><input data-st="${i}" data-c="merek" value="${esc(s.merek||'')}" style="width:100px"></td>
-    <td><input data-st="${i}" data-c="dia" value="${esc(s.dia||'')}" style="width:70px"></td>
-    <td><input data-st="${i}" data-c="pan" value="${esc(s.pan||'')}" style="width:70px"></td>
-    <td><input data-st="${i}" data-c="tek" value="${esc(s.tek||'')}" style="width:60px"></td>
-    <td><input data-st="${i}" data-c="pd" value="${esc(s.pd||'')}" style="width:60px"></td>
-    <td><input data-st="${i}" data-c="lot" value="${esc(s.lot||'')}" style="width:90px"></td>
-    <td><input data-st="${i}" data-c="exp" type="date" value="${esc(s.exp||'')}" style="width:120px"></td>
-    <td style="text-align:center"><input type="checkbox" data-st="${i}" data-c="direct" ${s.direct?'checked':''} style="width:auto"></td>
-    <td class="tight"><button data-delSt="${i}" type="button">✕</button></td>
-  </tr>`).join('')||`<tr><td colspan="11" style="text-align:center;color:var(--mu);padding:12px">Belum ada stent.</td></tr>`;
+    <td><select data-st="${i}" data-c="tipe" style="min-width:190px">${
+      DEVICE_TYPES.map(t=>`<option ${t===s.tipe?'selected':''}>${esc(t)}</option>`).join('')}</select></td>
+    <td><select data-st="${i}" data-c="seg" style="min-width:132px">${segOptions(s.seg)}</select></td>
+    <td><input data-st="${i}" data-c="merek" value="${esc(s.merek||'')}" style="width:100px" placeholder="merek"></td>
+    <td><input data-st="${i}" data-c="dia" value="${esc(s.dia||'')}" style="width:66px" placeholder="mm"></td>
+    <td><input data-st="${i}" data-c="pan" value="${esc(s.pan||'')}" style="width:66px" placeholder="mm"></td>
+    <td><input data-st="${i}" data-c="tek" value="${esc(s.tek||'')}" style="width:58px" placeholder="atm"></td>
+    <td><input data-st="${i}" data-c="pd" value="${esc(s.pd||'')}" style="width:58px" placeholder="atm"></td>
+    <td><input data-st="${i}" data-c="lot" value="${esc(s.lot||'')}" style="width:88px" placeholder="lot"></td>
+    <td><input data-st="${i}" data-c="exp" type="date" value="${esc(s.exp||'')}" style="width:118px"></td>
+    <td style="text-align:center"><input type="checkbox" data-st="${i}" data-c="direct" ${s.direct?'checked':''} style="width:auto" aria-label="Direct stenting"></td>
+    <td class="tight"><button class="del-btn" data-del-st="${i}" type="button" title="Hapus baris" aria-label="Hapus baris device">✕</button></td>
+  </tr>`).join('')||`<tr><td colspan="11" style="text-align:center;color:var(--mu);padding:12px">Belum ada device.</td></tr>`;
 }
 function attachDiagram(){
   const wrap=$('#dg');if(!wrap)return;
@@ -894,11 +981,23 @@ function genNarasi(){
   ['LM','LAD','LCX','RCA'].forEach(g=>R.push(`  ${g} : ${segDesc('A',g)}`));
   if(f.timiPre)R.push(`TIMI flow awal: ${f.timiPre}.`);
   if(S.stents.length){
-    R.push(`PCI dilakukan:`);
-    S.stents.forEach(s=>{
-      R.push(`  - ${s.direct?'Direct stenting':'Pemasangan stent'} ${s.tipe||''} ${s.merek||''} ${s.dia||'?'}×${s.pan||'?'} mm di ${s.seg}${s.tek?' tekanan '+s.tek+' atm':''}${s.pd?' post dilatasi '+s.pd+' atm':''}.`);
-    });
-    if(f.timiPost)R.push(`Angiografi post stenting: TIMI ${f.timiPost} flow.`);
+    const stents=S.stents.filter(s=>isStentType(s.tipe));
+    const lain=S.stents.filter(s=>!isStentType(s.tipe));
+    if(stents.length){
+      R.push(`PCI dilakukan:`);
+      stents.forEach(s=>{
+        const seg=segNameOf(s.seg);
+        R.push(`  - ${s.direct?'Direct stenting':'Pemasangan stent'} ${s.tipe||''} ${s.merek||''}${s.dia&&s.pan?` ${s.dia}×${s.pan} mm`:''}${seg?` di ${seg}`:''}${s.tek?` tekanan ${s.tek} atm`:''}${s.pd?`, post dilatasi ${s.pd} atm`:''}.`);
+      });
+    }
+    if(lain.length){
+      R.push(`Alat lain yang digunakan:`);
+      lain.forEach(s=>{
+        const seg=segNameOf(s.seg);
+        R.push(`  - ${s.tipe||''} ${s.merek||''}${s.dia?` ${s.dia} mm`:''}${seg?` di ${seg}`:''}${s.pan?` panjang ${s.pan} mm`:''}${s.tek?`, tekanan ${s.tek} atm`:''}.`);
+      });
+    }
+    if(stents.length&&f.timiPost)R.push(`Angiografi post stenting: TIMI ${f.timiPost} flow.`);
   }
   if(S.meds.length)R.push(`Obat diberikan: ${S.meds.map(m=>`${m.nama}${m.dosis?' '+m.dosis:''}${m.rute?' ('+m.rute+')':''}`).join(', ')}.`);
   const lastV=S.vitals[S.vitals.length-1];
@@ -918,7 +1017,10 @@ function autoKesimpulan(){
   const nv=[...v].filter(x=>x!=='LM'&&x!=='Lain').length;
   let t='Tidak ada stenosis signifikan.';
   if(nv||v.has('LM'))t=`CAD ${nv}VD${v.has('LM')?' + LM':''}`;
-  if(S.stents.length)t+=`, post ${S.stents.length} ${S.stents[0].tipe||'stent'} ${S.stents[0].merek||''} di ${S.stents.map(s=>s.seg).join(', ')}`;
+  if(S.stents.length){
+    const st=S.stents.filter(s=>isStentType(s.tipe));
+    if(st.length)t+=`, post ${st.length} ${st[0].tipe||'stent'} ${st[0].merek||''} di ${st.map(s=>segNameOf(s.seg)).join(', ')}`;
+  }
   return t.trim();
 }
 
@@ -978,10 +1080,10 @@ document.addEventListener('input',e=>{
     const val=t.type==='checkbox'?t.checked:t.value;
     S.stents[i]={...S.stents[i],[c]:val};
     if(c==='seg'){
-      const code=val.split(' ')[0],name=val.split(' ').slice(1).join(' ');
-      S.seg.B[segKey(code,name)]={s:'stent',p:'',n:[S.stents[i].merek,S.stents[i].dia&&S.stents[i].pan?S.stents[i].dia+'x'+S.stents[i].pan:''].filter(Boolean).join(' ').trim()};
+      applyDeviceToDiagram(i);
       attachDiagram();
     }
+    if(c==='tipe'){applyDeviceToDiagram(i);attachDiagram()}
     autoSync();return;
   }
 });
@@ -990,7 +1092,7 @@ document.addEventListener('input',e=>{
 document.addEventListener('change',e=>{
   const t=e.target;
   const k=t.dataset.k;
-  if(k&&['operator','operator2','fellow','resident','asisten','perawat','monitoring','kolim','dpjpMasuk','ttdNama'].includes(k)&&t.value){
+  if(k&&['operator','asisten','perawat','perawat2','monitoring','kolim','dpjpMasuk','ttdNama'].includes(k)&&t.value){
     const roster=JSON.parse(localStorage.getItem('cathlab:roster')||'[]');
     if(!roster.includes(t.value)){roster.push(t.value);localStorage.setItem('cathlab:roster',JSON.stringify(roster))}
     const dl=$('#dpjpList');
@@ -1074,7 +1176,15 @@ document.addEventListener('click',e=>{
   if(a==='addVital'){S.vitals.push({t:nowTime(),td:'',hr:'',rr:'',spo2:'',suhu:''});attachVitals();autoSync();return}
   if(a==='addMed'){S.meds.push({t:nowTime(),nama:'',dosis:'',rute:'',ket:''});attachMeds();autoSync();return}
   if(a==='medTpl'){const tpl=MED_TPL[b.dataset.tpl];S.meds.push({t:nowTime(),...tpl});attachMeds();autoSync();return}
-  if(a==='addStent'){S.stents.push({seg:'7 LAD mid',tipe:'DES',merek:'',dia:'',pan:'',tek:'',pd:'',lot:'',exp:'',direct:false});attachStent();attachDiagram();autoSync();return}
+  if(a==='addStent'||a==='addStentT'||a==='addStentMore'){
+    const tipe=a==='addStentMore'?null:(b.dataset.t||DEVICE_TYPES[0]);
+    S.stents.push({seg:'',tipe:tipe||DEVICE_TYPES[0],merek:'',dia:'',pan:'',tek:'',pd:'',lot:'',exp:'',direct:false});
+    attachStent();attachDiagram();autoSync();
+    // fokuskan baris baru agar langsung bisa diisi
+    const rows=$$('#stentTbl tbody tr');const last=rows[rows.length-1];
+    if(last){const inp=last.querySelector('input,select');if(inp){inp.focus();if(a==='addStentMore')pilihTipeBaru()}}
+    return;
+  }
   if(a==='gen'){S.man=false;S.f.narasi=genNarasi();const el=$('#narasi');if(el)el.value=S.f.narasi;refreshNarNote();autoSync();return}
   if(a==='kes'){S.f.kesimpulan=autoKesimpulan();const inp=document.querySelector('[data-k="kesimpulan"]');if(inp)inp.value=S.f.kesimpulan;autoSync();return}
   if(a==='simrsTest'){
@@ -1102,16 +1212,64 @@ document.addEventListener('click',e=>{
   if(a==='print'){openPreview();setTimeout(()=>window.print(),200);return}
   if(a==='back'){document.body.classList.remove('pv');return}
   if(a==='top'){window.scrollTo({top:0,behavior:'smooth'});return}
-  // delete buttons
-  if(b.dataset.delAk!==undefined){S.akses.splice(+b.dataset.delAk,1);attachAkses();autoSync();return}
-  if(b.dataset.delVt!==undefined){S.vitals.splice(+b.dataset.delVt,1);attachVitals();autoSync();return}
-  if(b.dataset.delMd!==undefined){S.meds.splice(+b.dataset.delMd,1);attachMeds();autoSync();return}
-  if(b.dataset.delSt!==undefined){
-    const s=S.stents[+b.dataset.delSt];
-    if(s){const code=s.seg.split(' ')[0],name=s.seg.split(' ').slice(1).join(' ');delete S.seg.B[segKey(code,name)]}
-    S.stents.splice(+b.dataset.delSt,1);attachStent();attachDiagram();autoSync();return;
-  }
+  // delete buttons (✕ hapus baris)
+  // Catatan: atribut data-* di HTML otomatis menjadi lowercase,
+  // sehingga ditulis kebab-case (data-del-st) dan dibaca via dataset.delSt.
+  if(b.dataset.delSt!==undefined){hapusStent(+b.dataset.delSt);return}
+  if(b.dataset.delAk!==undefined){hapusAkses(+b.dataset.delAk);return}
+  if(b.dataset.delVt!==undefined){hapusVital(+b.dataset.delVt);return}
+  if(b.dataset.delMd!==undefined){hapusMed(+b.dataset.delMd);return}
 });
+
+/* ---------- Hapus baris (dengan konfirmasi) ---------- */
+function konfirmasiHapus(label){
+  return confirm('Hapus baris '+label+'?');
+}
+function hapusAkses(i){
+  const a=S.akses[i];if(!a)return;
+  if(!konfirmasiHapus('akses '+a.site))return;
+  S.akses.splice(i,1);attachAkses();autoSync();toast('Baris akses dihapus.','');
+}
+function hapusVital(i){
+  const v=S.vitals[i];if(!v)return;
+  if(!konfirmasiHapus('vital '+(v.t||'#'+(i+1))))return;
+  S.vitals.splice(i,1);
+  // sinkronkan vital terakhir ke field utama
+  const last=S.vitals[S.vitals.length-1];
+  if(last){S.f.td=last.td||'';S.f.hr=last.hr||'';S.f.rr=last.rr||'';S.f.spo2=last.spo2||'';S.f.suhu=last.suhu||''}
+  else{S.f.td='';S.f.hr='';S.f.rr='';S.f.spo2='';S.f.suhu=''}
+  attachVitals();autoSync();toast('Baris vital dihapus.','');
+}
+function hapusMed(i){
+  const m=S.meds[i];if(!m)return;
+  if(!konfirmasiHapus('obat '+(m.nama||'#'+(i+1))))return;
+  S.meds.splice(i,1);attachMeds();autoSync();toast('Baris obat dihapus.','');
+}
+
+/* Hapus baris device + bersihkan penanda segmen pada diagram */
+function hapusStent(i){
+  const s=S.stents[i];if(!s)return;
+  if(!konfirmasiHapus('device '+(s.tipe||'#'+(i+1))+(s.merek?' '+s.merek:'')))return;
+  if(s._marked){
+    const cur=S.seg.B[s._marked];
+    if(cur&&cur._byDevice===i)delete S.seg.B[s._marked];
+  }
+  S.stents.splice(i,1);
+  // indeks _byDevice pada device yang tersisa harus digeser
+  S.stents.forEach((d,n)=>{if(d._marked&&d._marked in S.seg.B){S.seg.B[d._marked]._byDevice=n}});
+  attachStent();attachDiagram();autoSync();toast('Baris device dihapus.','');
+}
+
+/* Prompt pilihan tipe device untuk baris terakhir */
+function pilihTipeBaru(){
+  const rows=$$('#stentTbl tbody tr');const last=rows[rows.length-1];
+  if(!last)return;
+  const sel=last.querySelector('select[data-c="tipe"]');
+  if(!sel)return;
+  sel.focus();
+  sel.dataset.pending='1';
+  toast('Pilih tipe device pada kolom Tipe.');
+}
 
 /* =========================================================
    AUTOLOAD PASIEN
@@ -1218,15 +1376,15 @@ function legendHTML(){
 function segLegend(phases){
   const rows=phases.flatMap(ph=>SEG.filter(([c,n])=>(S.seg[ph]||{})[segKey(c,n)]?.s).map(([c,n])=>{
     const s=S.seg[ph][segKey(c,n)];
-    return `<tr><td>${esc(labelFor(ph))}</td><td>${esc(c)} ${esc(n)}</td><td>${STATUS_LBL[s.s]||s.s}</td><td>${s.p?esc(s.p)+'%':'-'}</td><td>${esc(s.n||'-')}</td></tr>`;
+    return `<tr><td>${esc(labelFor(ph))}</td><td>${esc(n)}</td><td>${STATUS_LBL[s.s]||s.s}</td><td>${s.p?esc(s.p)+'%':'-'}</td><td>${esc(s.n||'-')}</td></tr>`;
   })).join('');
   return rows||'<tr><td colspan="5" style="text-align:center">Tidak ada anotasi</td></tr>';
 }
 function stentTblHTML(){
   if(!S.stents.length)return'';
-  return `<h4>Stent & Devices</h4><table class="lt">
+  return `<h4>Alat & Devices</h4><table class="lt">
     <tr><th>Segmen</th><th>Tipe</th><th>Merek</th><th>Ukuran (mm)</th><th>Tekanan/Post</th><th>No. Lot</th><th>Exp.</th></tr>
-    ${S.stents.map(s=>`<tr><td>${esc(s.seg)}</td><td>${esc(s.tipe||'-')}</td><td>${esc(s.merek||'-')}</td><td>${esc((s.dia||'-')+' x '+(s.pan||'-'))}</td><td>${esc((s.tek||'-')+' / '+(s.pd||'-'))}</td><td>${esc(s.lot||'-')}</td><td>${s.exp?tgID(s.exp):'-'}</td></tr>`).join('')}
+    ${S.stents.map(s=>`<tr><td>${esc(segNameOf(s.seg)||'-')}</td><td>${esc(s.tipe||'-')}</td><td>${esc(s.merek||'-')}</td><td>${esc((s.dia||'-')+' x '+(s.pan||'-'))}</td><td>${esc((s.tek||'-')+' / '+(s.pd||'-'))}</td><td>${esc(s.lot||'-')}</td><td>${s.exp?tgID(s.exp):'-'}</td></tr>`).join('')}
   </table>`;
 }
 function vitalsTblHTML(){
@@ -1494,8 +1652,8 @@ function demo(){
     tglMasuk:'2026-09-03',ruang:'Cathlab 1',kelas:'VIP',dpjpMasuk:'dr. Puspita Sari Bustanul, Sp.JP',
     tgl:'2026-09-03',mulai:'23:21',selesai:'00:20',anestesi:'',
     jenis:'PCI / PPCI',labelPre:'PRE PCI',labelPost:'POST PCI',
-    operator:'dr. Puspita Sari Bustanul, Sp.JP',operator2:'',fellow:'',resident:'',
-    asisten:'Ginda Sorip Naposo, Amd.Kep',perawat:'ADE, Am.Kep',kolim:'Marlengga',monitoring:'',
+    operator:'dr. Puspita Sari Bustanul, Sp.JP',
+    asisten:'Ginda Sorip Naposo, Amd.Kep',perawat:'ADE, Am.Kep',perawat2:'Siti Rahma, Am.Kep',kolim:'Marlengga',monitoring:'',
     diagnosaPre:'STEMI Anterior Onset 7 Jam',indikasi:'Nyeri dada tipikal, elevasi ST V1-V4',
     keluhan:'Nyeri dada sejak 7 jam SMRS',riwayat:'Hipertensi, DM tipe 2',obatRutin:'Amlodipin 10 mg, Metformin 500 mg',
     alergi:'-',killip:'I',ccs:'',
@@ -1524,8 +1682,8 @@ function demo(){
     [segKey('7','LAD mid')]:{s:'stenosis',p:'95-99',n:'thrombus gr IV, TIMI 1-2'},
     [segKey('2','RCA mid')]:{s:'stenosis',p:'10-20',n:'irregular proksimal-mid'}
   };
-  S.stents=[{seg:'7 LAD mid',tipe:'DES',merek:'Eternia',dia:'3.0',pan:'24',tek:'10',pd:'12',lot:'ETN2024A',exp:'',direct:true}];
-  S.seg.B={[segKey('7','LAD mid')]:{s:'stent',p:'',n:'Eternia 3.0x24'}};
+  S.stents=[{seg:'7 LAD mid',tipe:'Stent (DES)',merek:'Eternia',dia:'3.0',pan:'24',tek:'10',pd:'12',lot:'ETN2024A',exp:'',direct:true,_marked:segKey('7','LAD mid')}];
+  S.seg.B={[segKey('7','LAD mid')]:{s:'stent',p:'',n:'Eternia 3.0x24',_byDevice:0}};
   S.f.kesimpulan=autoKesimpulan();
   S.man=false;
   S.f.narasi=genNarasi();
