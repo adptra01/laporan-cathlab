@@ -287,7 +287,7 @@
     var filled = Object.keys(state.data).filter(function (k) { return String(state.data[k]).trim() !== ''; });
     $('#panel').innerHTML =
       '<h2 style="font-size:17px">Ringkasan Pengisian</h2>' +
-      '<p class="hint">Data tersimpan di browser ini (localStorage). Salin ke form aslinya atau buka form untuk mengisi bagian interaktif.</p>' +
+      '<p class="hint">Data tersimpan sementara di browser ini (localStorage). Gunakan ringkasan ini untuk memeriksa kelengkapan, lalu buka form asli.</p>' +
       '<div class="tw"><table class="summary"><thead><tr><th>Step</th><th>Status</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
       '<h3>Ringkasan nilai (' + filled.length + ' field terisi)</h3>' +
       '<div class="tw"><table class="summary"><tbody>' +
@@ -297,11 +297,7 @@
           esc(String(state.data[k]).slice(0, 160)) + '</td></tr>';
       }).join('') : '<tr><td colspan="2" class="muted">Belum ada data.</td></tr>') +
       '</tbody></table></div>' +
-      '<h3>Data siap disalin (JSON)</h3>' +
-      '<textarea rows="8" style="width:100%;font-family:Consolas,monospace;font-size:12px">' + esc(JSON.stringify(state.data, null, 2)) + '</textarea>' +
       '<div class="steps-btns">' +
-      '<button class="btn" id="copy" type="button">Salin JSON</button>' +
-      '<button class="btn" id="export" type="button">Unduh .json</button>' +
       '<button class="btn btn-ac" id="restart" type="button">Mulai ulang</button>' +
       '<a class="btn btn-ac" id="goForm" href="form-input-lengkap.html">Buka Form Lengkap</a>' +
       '</div>';
@@ -408,25 +404,6 @@
         save(); render(); Docs.toast('Step dikosongkan.', '');
       }
       if (a.id === 'submit') { if (canAdvance()) renderSummary(); }
-      if (a.id === 'copy') {
-        var ta = $('#panel textarea');
-        if (!ta) return;
-        ta.select();
-        try {
-          if (navigator.clipboard) navigator.clipboard.writeText(ta.value).then(function () { Docs.toast('JSON disalin.', 'ok'); });
-          else { document.execCommand('copy'); Docs.toast('JSON disalin.', 'ok'); }
-        } catch (err) { Docs.toast('Copy gagal — blok teks dan salin manual.', 'err'); }
-      }
-      if (a.id === 'export') {
-        try {
-          var blob = new Blob([JSON.stringify(state.data, null, 2)], { type: 'application/json' });
-          var url = URL.createObjectURL(blob);
-          var link = document.createElement('a');
-          link.href = url; link.download = 'cathlab_walkthrough.json'; link.click();
-          URL.revokeObjectURL(url);
-          Docs.toast('File JSON diunduh.', 'ok');
-        } catch (err) { Docs.toast('Unduh gagal.', 'err'); }
-      }
       if (a.id === 'restart') { state = { step: 0, data: {}, touched: {}, tried: {}, submitted: false }; save(); render(); scrollTo({ top: 0, behavior: 'smooth' }); }
     }, 'tombol walkthrough'));
   }
@@ -500,7 +477,7 @@
       {
         popover: {
           title: 'Siap mengisi',
-          description: 'Progres tersimpan otomatis di browser ini. Setelah semua step selesai Anda mendapat <b>ringkasan</b> + JSON yang bisa disalin atau diunduh, lalu buka form asli untuk mencetak laporan.'
+          description: 'Progres tersimpan otomatis di browser ini. Setelah semua step selesai Anda mendapat <b>ringkasan</b>, lalu buka form asli untuk mencetak laporan.'
         }
       }
     ]);

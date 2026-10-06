@@ -46,7 +46,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), Versi [SemVer]
 ### Dihapus
 - **Fungsi Ekspor & Impor JSON** dari form utama: tombol `Ekspor` dan
   `Impor`, input file `#impf`, handler `FileReader`, fungsi `exportJSON()`,
-  dan pintasan `Ctrl+E`. Penyimpanan tetap memakai auto-save `localStorage`
+  dan pintasan `Ctrl+E`. Tombol `Salin JSON` dan `Unduh .json` juga dihapus
+  dari ringkasan walkthrough. Penyimpanan tetap memakai auto-save `localStorage`
   dengan riwayat versi (maks. 20 snapshot per RM).
 
 ### Ditambahkan
