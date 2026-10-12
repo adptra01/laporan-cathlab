@@ -10,10 +10,10 @@ dokumentasi, panduan interaktif, dan panduan integrasi SIMRS.
 | Halaman | File | Fungsi |
 |---|---|---|
 | Halaman Depan | `index.html` | Pintu masuk, memilih versi form atau dokumentasi |
-| Form Laporan | `form-input-lengkap.html` | Form lengkap (14 section): timeline vital, registry alat, komplikasi terstruktur, 3 template cetak, riwayat versi, integrasi SIMRS |
-| Interactive Form Guide | `form-guide.html` | Tur Driver.js di atas form: highlight field, tooltip, validasi real-time, Next/Prev/Skip |
-| Dokumentasi Form | `form-docs.html` | Referensi tiap field: tipe data, format, regex, validasi, contoh, error |
-| Step-by-Step Walkthrough | `form-walkthrough.html` | Pengisian 7 step: progress, validasi per step, dan ringkasan |
+| Form Laporan | `form-input-lengkap.html` | Form utama laporan cathlab. |
+| Interactive Form Guide | `form-guide.html` | Tur field + validasi real-time. |
+| Dokumentasi Form | `form-docs.html` | Referensi field. |
+| Step-by-Step Walkthrough | `form-walkthrough.html` | Pengisian bertahap 7 step. |
 | Integrasi SIMRS | `simrs-guide.html` | Master data pasien & dokter: endpoint, pemetaan field, konfigurasi, pengujian |
 
 ## Alat & Devices (Stent & Devices)

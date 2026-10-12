@@ -69,7 +69,7 @@
        jk, alamat, no_telepon, penjamin, dpjp_masuk, ruang, kelas }
    GET {BASE_URL}/MASTER/dokter        → [ { nama_lengkap }, … ]
    Pemetaan field & konfigurasi ada di form-input-lengkap.html (SIMRS_CONFIG,
-   FIELD_MAP, fetchPasien, fetchDokter). Lihat simrs-guide.html untuk penjelasan. */
+   FIELD_MAP. Lihat simrs-guide.html untuk penjelasan. */
 var SIMRS_DOCS = {
   baseUrl: '',
   pasienPath: '/MASTER/pasien/{no_rm}',
@@ -100,7 +100,7 @@ var SIMRS_DOCS = {
   var SECTIONS = [
     {
       id: 's1', n: 1, title: 'Pasien & Identitas', lengkapTitle: '1. Identitas Pasien',
-      desc: 'Identitas dasar pasien sebagai kunci rekam medis. Pada form Lengkap, No. RM + Enter memanggil master pasien SIMRS (GET /api/MASTER/pasien/{no_rm}); field terpetakan: nama, No. Registrasi, tgl lahir, jenis kelamin, alamat, telepon, penjamin, DPJP masuk, ruang, kelas. Datalist dokter diisi dari /api/MASTER/dokter. Kolom di bawah readonly karena bersumber dari SIMRS.',
+      desc: 'Identitas dasar pasien sebagai kunci rekam medis. Pada form Lengkap, No. RM + Enter memanggil master pasien SIMRS; field terpetakan: nama, No. Registrasi, tgl lahir, jenis kelamin, alamat, telepon, penjamin, DPJP masuk, ruang, kelas. Datalist dokter diisi dari master dokter. Kolom di bawah readonly karena bersumber dari SIMRS.',
       fields: [
         T('rm', 'No. RM *', { required: true, pattern: '^[0-9]{4,12}$', patternMsg: 'No. RM harus 4–12 digit angka', min: 4, max: 12, example: '00051563', tips: 'Tanpa nol di depan akan gagal. Gunakan No. RM resmi dari rekam medis.', errors: ['Kosong → "No. RM harus diisi" (wajib)', 'Mengandung huruf → "No. RM harus 4–12 digit angka"', 'Lebih dari 12 digit → "Maksimal 12 karakter"'] }),
         T('nama', 'Nama Lengkap *', { required: true, min: 3, max: 80, example: 'DARMAWAN', tips: 'Terisi otomatis setelah No. RM diisi lalu Enter (master pasien SIMRS).', errors: ['Kosong → "Wajib diisi"', '<Kurang 3 karakter → "Minimal 3 karakter"'] }),
@@ -187,7 +187,7 @@ var SIMRS_DOCS = {
     },
     {
       id: 's7', n: 7, title: 'Hemodinamik & Vital', lengkapTitle: '7. Hemodinamik & Vital',
-      desc: 'Tanda-tanda vital selama tindakan. Disimpan sebagai timeline pengukuran (waktu, TD, HR, RR, SpO₂, suhu); nilai terakhir otomatis disalin ke ringkasan. Tombol ✕ menghapus baris dengan konfirmasi.',
+      desc: 'Tanda-tanda vital selama tindakan. Disimpan berurutan sebagai timeline pengukuran (waktu, TD, HR, RR, SpO₂, suhu); nilai terakhir otomatis disalin ke ringkasan. Tombol ✕ menghapus baris dengan konfirmasi.',
       special: true, specialKey: 'vitalTl',
       fields: [
         { k: 'vitalTl', label: 'Timeline Hemodinamik', type: 'table', columns: ['Waktu', 'TD (mmHg)', 'HR (bpm)', 'RR', 'SpO2 (%)', 'Suhu (°C)'], example: '23:21 | 130/70 | 76 | 26 | 98 | 36.6', tips: 'Tombol "+ Tambah Vital" menambah baris; ✕ menghapus baris dengan konfirmasi. Nilai TD/HR/RR/SpO₂/suhu pada baris terakhir otomatis dipakai pada ringkasan cetak.', errors: [] },

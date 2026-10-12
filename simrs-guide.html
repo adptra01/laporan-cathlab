@@ -33,7 +33,7 @@ table td code{white-space:nowrap}
 <main>
   <div class="hero">
     <h1>Master Data SIMRS — Pasien & Dokter</h1>
-    <p class="muted">Halaman ini menjelaskan bagaimana form mengambil data master pasien dan dokter dari SIMRS, endpoint yang dibutuhkan, cara pemetaan field, serta cara mengonfigurasi dan mengujinya.</p>
+    <p class="muted">Cara mengambil data pasien dan dokter dari SIMRS, beserta konfigurasi dan pengujiannya.</p>
   </div>
 
   <div class="card">
@@ -41,7 +41,7 @@ table td code{white-space:nowrap}
     <div class="flow">
       <span class="node">User isi No. RM</span><span class="arrow">→</span>
       <span class="node">Tekan Enter</span><span class="arrow">→</span>
-      <span class="node">fetchPasien(rm)</span><span class="arrow">→</span>
+      <span class="node">Ambil data pasien dari SIMRS</span><span class="arrow">→</span>
       <span class="node">GET SIMRS</span><span class="arrow">→</span>
       <span class="node">mapPasien()</span><span class="arrow">→</span>
       <span class="node">Form terisi otomatis</span>
@@ -72,8 +72,8 @@ localStorage.setItem('cathlab:simrs', JSON.stringify({
     <div class="tw"><table>
       <thead><tr><th>Kebutuhan</th><th>Path</th><th>Contoh</th><th>Dipakai oleh</th></tr></thead>
       <tbody>
-        <tr><td>Master pasien</td><td><code>MASTER/pasien/{no_rm}</code></td><td><code>/api/rest/MASTER/pasien/00051563</code></td><td><code>fetchPasien()</code></td></tr>
-        <tr><td>Master dokter</td><td><code>MASTER/dokter</code></td><td><code>/api/rest/MASTER/dokter</code></td><td><code>fetchDokter()</code></td></tr>
+        <tr><td>Master pasien</td><td><code>MASTER/pasien/{no_rm}</code></td><td><code>/api/rest/MASTER/pasien/00051563</code></td><td>Ambil data pasien</td></tr>
+        <tr><td>Master dokter</td><td><code>MASTER/dokter</code></td><td><code>/api/rest/MASTER/dokter</code></td><td>Ambil data dokter</td></tr>
       </tbody>
     </table></div>
     <h3>Contoh respons pasien</h3>
@@ -135,8 +135,8 @@ localStorage.setItem('cathlab:simrs', JSON.stringify({
       <li><b>Gagal / timeout</b> → menampilkan pesan error dari server atau batas waktu.</li>
     </ul>
     <h3>Periksa manual dari console</h3>
-<pre><span class="k">await</span> fetchPasien(<span class="s">'00051563'</span>)   <span class="c">// data pasien</span>
-<span class="k">await</span> fetchDokter()                <span class="c">// daftar dokter</span></pre>
+<pre><span class="k">await</span> ambilPasien(<span class="s">'00051563'</span>)   <span class="c">// data pasien</span>
+<span class="k">await</span> ambilDokter()                <span class="c">// daftar dokter</span></pre>
   </div>
 
   <div class="card">

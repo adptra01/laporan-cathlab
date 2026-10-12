@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Laporan Tindakan Cathlab — RSUD H. Abdul Manap</title>
+<link rel="stylesheet" href="css/lib/driver.css">
 <style>
 :root{--ac:#0f766e;--ac2:#0d9488;--ink:#0f1e2b;--mu:#5b6b7a;--ln:#d6dde3;--bg:#eef2f4;
   --ok:#16a34a;--warn:#ea580c;--err:#dc2626;--neutral:#64748b;--card:#fff;--card2:#f8fafb}
@@ -22,7 +23,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--ac);outline-offs
 textarea{min-height:100px;resize:vertical;font-family:inherit}
 label{display:block;font-size:11.5px;color:var(--mu);margin-bottom:3px;font-weight:500}
 
-#topbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.97);backdrop-filter:blur(6px);border-bottom:1px solid var(--ln);padding:8px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+#topbar{position:static;top:0;z-index:30;background:rgba(255,255,255,.97);backdrop-filter:blur(6px);border-bottom:1px solid var(--ln);padding:8px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 #topbar .t{font-weight:600;font-size:14px}
 #topbar .meta{color:var(--mu);font-size:12px}
 #topbar .actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
@@ -32,15 +33,6 @@ label{display:block;font-size:11.5px;color:var(--mu);margin-bottom:3px;font-weig
 #sv.saving{color:var(--warn)}
 #sv.saved{color:var(--ok)}
 
-#jump{position:sticky;top:56px;z-index:29;background:rgba(255,255,255,.97);backdrop-filter:blur(6px);border-bottom:1px solid var(--ln);padding:6px 20px;display:flex;gap:6px;overflow-x:auto;white-space:nowrap}
-#jump::-webkit-scrollbar{height:4px}
-#jump::-webkit-scrollbar-thumb{background:var(--ln);border-radius:2px}
-#jump a{font-size:11.5px;padding:3px 10px;border:1px solid var(--ln);border-radius:12px;text-decoration:none;color:var(--ink);flex-shrink:0;cursor:pointer}
-#jump a:hover{background:#f0fdfa;border-color:var(--ac);color:var(--ac)}
-#jump a .st{display:inline-block;width:6px;height:6px;border-radius:50%;background:#cbd5e1;margin-left:5px;vertical-align:middle}
-#jump a .st.ok{background:var(--ok)}
-#jump a .st.warn{background:var(--warn)}
-#jump a .st.err{background:var(--err)}
 
 main{max-width:1000px;margin:14px auto;padding:0 16px}
 .section{background:var(--card);border:1px solid var(--ln);border-radius:10px;padding:16px 18px;margin-bottom:14px;scroll-margin-top:110px}
@@ -119,7 +111,7 @@ tbody tr:hover td.tight{background:var(--card2)}
 #fab button{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px #0003;padding:0;font-size:16px}
 
 #print{display:none}
-body.pv #topbar,body.pv #jump,body.pv main,body.pv #fab{display:none}
+body.pv #topbar,body.pv main,body.pv #fab{display:none}
 body.pv #print{display:block}
 #print{font:11px/1.4 Arial,sans-serif;color:#000;background:#fff;width:210mm;margin:40px auto;box-shadow:0 2px 12px #0004}
 .pvbar{display:none;position:fixed;top:0;left:0;right:0;gap:8px;padding:8px 16px;background:#fff;z-index:60;border-bottom:1px solid var(--ln);align-items:center;flex-wrap:wrap}
@@ -158,7 +150,7 @@ body.pv .pvbar{display:flex}
 .vitals-tbl th,.vitals-tbl td{border:1px solid #999;padding:2px 4px}
 @media print{
   body{background:#fff;padding:0}
-  #topbar,#jump,main,.pvbar,.md,#toast,#fab{display:none!important}
+  #topbar,main,.pvbar,.md,#toast,#fab{display:none!important}
   #print{display:block!important;box-shadow:none;margin:0;width:auto}
   @page{size:A4;margin:0}
   .pg{padding:12mm 14mm;min-height:0;page-break-after:always}
@@ -178,13 +170,13 @@ body.pv .pvbar{display:flex}
     <button data-a="demo">Contoh</button>
     <button data-a="reset">Reset</button>
     <button data-a="hist">Riwayat</button>
+    <button data-a="guide" class="b2" type="button">Panduan</button>
     <a href="simrs-guide.html" style="font:inherit;font-size:13px;padding:7px 13px;border:1px solid var(--ln);border-radius:6px;text-decoration:none;color:var(--ink);align-self:center">Panduan SIMRS</a>
     <button data-a="prev">Pratinjau</button>
     <button class="b1" data-a="print">Cetak</button>
   </div>
 </div>
 
-<div id="jump"></div>
 <main id="sections"></main>
 
 <div id="fab">
@@ -210,6 +202,8 @@ body.pv .pvbar{display:flex}
 <div id="print"></div>
 
 <script src="js/lib/qrcode-generator.js"></script>
+<script src="js/lib/driver.iife.js"></script>
+<script src="js/form-schema.js"></script>
 <script>
 'use strict';
 /* =========================================================
@@ -223,24 +217,24 @@ const BLN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','S
 const tgID=i=>{if(!i)return'-';const[y,m,d]=i.split('-');return `${+d} ${BLN[m-1]} ${y}`};
 
 const SEG=[
-  ["1","RCA prox",  "M 400 90 Q 420 130 425 175", 422, 130],
-  ["2","RCA mid",   "M 425 175 Q 425 220 415 260", 422, 220],
-  ["3","RCA distal","M 415 260 Q 400 300 380 320", 388, 305],
-  ["4","PDA",       "M 415 260 Q 370 265 340 275", 365, 258],
-  ["16","PLV",      "M 400 295 Q 370 300 350 305", 355, 322],
-  ["16a","RPD",     "M 425 175 Q 460 170 480 175", 462, 168],
-  ["16b","RPLV",    "M 415 260 Q 450 255 470 260", 452, 248],
-  ["5","LM",        "M 180 60 Q 175 85 170 105", 185, 70],
-  ["6","LAD prox",  "M 170 105 Q 150 140 130 180", 115, 150],
-  ["7","LAD mid",   "M 130 180 Q 115 220 110 260", 80, 230],
-  ["8","LAD dist",  "M 110 260 Q 105 290 115 315", 72, 300],
-  ["9","D1",        "M 140 160 Q 175 175 200 200", 185, 190],
-  ["10","D2",       "M 125 210 Q 155 230 175 255", 160, 240],
-  ["11","LCX prox", "M 170 105 Q 220 115 250 140", 215, 125],
-  ["12","OM1",      "M 250 145 Q 255 190 245 230", 235, 185],
-  ["13","LCX mid",  "M 250 140 Q 280 165 295 200", 275, 180],
-  ["14","OM2",      "M 285 185 Q 285 220 280 250", 288, 225],
-  ["15","LCX dist", "M 295 200 Q 305 230 300 260", 295, 250]
+  ["1","RCA prox",  "M 120 90 Q 100 130 95 175", 98, 130],
+  ["2","RCA mid",   "M 95 175 Q 95 220 105 260", 98, 220],
+  ["3","RCA distal","M 105 260 Q 120 300 140 320", 132, 305],
+  ["4","PDA",       "M 105 260 Q 150 265 180 275", 155, 258],
+  ["16","PLV",      "M 120 295 Q 150 300 170 305", 165, 322],
+  ["16a","RPD",     "M 95 175 Q 60 170 40 175", 58, 168],
+  ["16b","RPLV",    "M 105 260 Q 70 255 50 260", 68, 248],
+  ["5","LM",        "M 340 60 Q 345 85 350 105", 335, 70],
+  ["6","LAD prox",  "M 350 105 Q 370 140 390 180", 405, 150],
+  ["7","LAD mid",   "M 390 180 Q 405 220 410 260", 440, 230],
+  ["8","LAD dist",  "M 410 260 Q 415 290 405 315", 448, 300],
+  ["9","D1",        "M 380 160 Q 345 175 320 200", 335, 190],
+  ["10","D2",       "M 395 210 Q 365 230 345 255", 360, 240],
+  ["11","LCX prox", "M 350 105 Q 300 115 270 140", 305, 125],
+  ["12","OM1",      "M 270 145 Q 265 190 275 230", 285, 185],
+  ["13","LCX mid",  "M 270 140 Q 240 165 225 200", 245, 180],
+  ["14","OM2",      "M 235 185 Q 235 220 240 250", 232, 225],
+  ["15","LCX dist", "M 225 200 Q 215 230 220 260", 225, 250]
 ];
 const STATUS_LBL={normal:'Normal',stenosis:'Stenosis',stent:'Stent',thrombus:'Trombus',cto:'Oklusi total'};
 const AKS=['Radialis kanan','Radialis kiri','Brachialis kanan','Brachialis kiri','Femoral kanan','Femoral kiri'];
@@ -552,7 +546,7 @@ const SECTIONS=[
 ];
 
 function sec_identitas(){
-  return sec_wrap('s1','Identitas Pasien','Isi No. RM lalu tekan <b>Enter</b> untuk auto-load dari SIMRS. '+
+  return sec_wrap('s1','Identitas Pasien','Isi No. RM lalu Enter untuk auto-load SIMRS. '+
     '<button type="button" class="b2" data-a="simrsTest" style="font-size:11px;padding:3px 8px">Uji koneksi</button> '+
     '<span id="simrsSt" style="font-size:11px;color:var(--mu)"></span>',
     `<div class="g">
@@ -568,7 +562,7 @@ function sec_identitas(){
     </div>`);
 }
 function sec_admisi(){
-  return sec_wrap('s2','Admisi & Jadwal Tindakan','Data kunjungan dan waktu pelaksanaan.',
+  return sec_wrap('s2','Admisi & Jadwal Tindakan','Data kunjungan tindakan.',
     `<div class="g">
       ${fd('tglMasuk','Tanggal Masuk','date')}
       ${fd('ruang','Ruang / Cathlab')}
@@ -591,7 +585,7 @@ function sec_admisi(){
     </div>`);
 }
 function sec_tim(){
-  return sec_wrap('s3','Tim Operator & Peran','Nama tersimpan otomatis dan muncul sebagai saran.',
+  return sec_wrap('s3','Tim Operator & Peran','Nama tersimpan otomatis.',
     `<div class="g">
       ${fd('operator','Dokter Operator *','text','','w2')}
       ${fd('asisten','Asisten / Scrub','text','','w2')}
@@ -602,7 +596,7 @@ function sec_tim(){
     </div>`);
 }
 function sec_klinis(){
-  return sec_wrap('s4','Indikasi & Klinis','Diagnosis, gejala, riwayat, dan klasifikasi klinis.',
+  return sec_wrap('s4','Indikasi & Klinis','Diagnosis, gejala, dan klasifikasi klinis.',
     `<div class="g">
       ${fd('diagnosaPre','Diagnosis Pre Tindakan *','text','','w2')}
       <div class="fd wf"><label>Indikasi Tindakan</label><textarea data-k="indikasi" style="min-height:60px" placeholder="mis. STEMI onset 7 jam"></textarea></div>
@@ -615,7 +609,7 @@ function sec_klinis(){
     </div>`);
 }
 function sec_pra(){
-  return sec_wrap('s5','Pra-Tindakan','Persetujuan, pemeriksaan penunjang, dan lab.',
+  return sec_wrap('s5','Pra-Tindakan','Persetujuan, lab, dan pemeriksaan.',
     `<div class="g">
       ${sl('consent','Informed Consent',['Ya','Tidak','Pending'])}
       ${sl('puasa','Puasa',['Ya','Tidak','Tidak Perlu'])}
@@ -640,14 +634,14 @@ function sec_pra(){
     </div>`);
 }
 function sec_akses(){
-  return sec_wrap('s6','Akses Vaskular','Bisa lebih dari satu lokasi akses.',
+  return sec_wrap('s6','Akses Vaskular','Isi akses vaskular.',
     `<div class="tw" style="margin-bottom:10px"><table id="aksesTbl">
       <thead><tr><th>Site</th><th>Sheath (F)</th><th>Lokasi Detail</th><th>Anestesi Lokal</th><th>Komplikasi Lokal</th><th></th></tr></thead>
       <tbody></tbody></table></div>
     <button data-a="addAkses" class="b2" type="button">+ Tambah Akses</button>`);
 }
 function sec_vital(){
-  return sec_wrap('s7','Hemodinamik & Vital','Timeline pengukuran selama tindakan.',
+  return sec_wrap('s7','Hemodinamik & Vital','Timeline vital selama tindakan.',
     `<div class="tl" id="vitalTl"></div>
     <div style="margin-top:10px"><button data-a="addVital" class="b2" type="button">+ Tambah Vital</button></div>
     <div class="g" style="margin-top:12px">
@@ -658,7 +652,7 @@ function sec_vital(){
     </div>`);
 }
 function sec_obat(){
-  return sec_wrap('s8','Obat & Media Kontras','Catat semua obat dan media kontras yang diberikan.',
+  return sec_wrap('s8','Obat & Media Kontras','Catat obat dan kontras.',
     `<div class="tw" style="margin-bottom:10px"><table id="medsTbl">
       <thead><tr><th>Waktu</th><th>Nama Obat</th><th>Dosis</th><th>Rute</th><th>Keterangan</th><th></th></tr></thead>
       <tbody></tbody></table></div>
@@ -682,7 +676,7 @@ function sec_diagram(){
     `<div class="dgw" id="dg"></div>`);
 }
 function sec_stent(){
-  return sec_wrap('s10','Alat & Devices','Registry alat yang dipakai: stent, balloon, guide wire, kateter (diagnostik, guiding, extension), dan lainnya. Nama segmen ditampilkan tanpa kode angka AHA.',
+  return sec_wrap('s10','Alat & Devices','Registry alat. Segmen tanpa kode angka.',
     `<div class="tw" style="margin-bottom:10px"><table id="stentTbl">
       <thead><tr><th>Tipe</th><th>Segmen</th><th>Merek</th><th>Dia (mm)</th><th>Panjang (mm)</th><th>Tekanan (atm)</th><th>Post-dil (atm)</th><th>No. Lot</th><th>Exp.</th><th>Direct</th><th class="del">Hapus</th></tr></thead>
       <tbody></tbody></table></div>
@@ -693,7 +687,7 @@ function sec_stent(){
     </div>`);
 }
 function sec_kompl(){
-  return sec_wrap('s11','Komplikasi & Adverse Events','Centang semua yang terjadi.',
+  return sec_wrap('s11','Komplikasi & Adverse Events','Centang komplikasi.',
     `<div class="g2">
       ${COMPL_LIST.map(c=>`<div class="card"><h3>${esc(c.cat)}</h3>
         <div class="chs">${c.items.map(it=>{
@@ -708,7 +702,7 @@ function sec_kompl(){
     </div>`);
 }
 function sec_post(){
-  return sec_wrap('s12','Rencana Post-Tindakan','Disposisi, follow-up, dan edukasi pasien.',
+  return sec_wrap('s12','Rencana Post-Tindakan','Disposisi dan rencana pulang.',
     `<div class="g">
       ${sl('disposisi','Disposisi',['Rawat inap','Rawat jalan','Rujuk','ICU','HCU','Pulang atas permintaan sendiri'])}
       ${fd('followUp','Follow-up','text','placeholder="mis. kontrol 2 minggu"')}
@@ -717,7 +711,7 @@ function sec_post(){
     <div class="fd wf" style="margin-top:10px"><label>Edukasi Pasien</label><textarea data-k="edukasi" style="min-height:60px"></textarea></div>`);
 }
 function sec_narasi(){
-  return sec_wrap('s13','Narasi & Kesimpulan','Narasi otomatis dari data di atas. Bisa diedit manual.',
+  return sec_wrap('s13','Narasi & Kesimpulan','Bisa edit narasi manual.',
     `<div class="fd wf"><label>Narasi Tindakan</label>
       <textarea data-k="narasi" id="narasi" style="min-height:230px"></textarea>
       <div style="display:flex;gap:6px;align-items:center;margin-top:6px">
@@ -734,7 +728,7 @@ function sec_narasi(){
 }
 function sec_ttd(){
   return sec_wrap('s14','Tembusan & Barcode',
-    'Tentukan tujuan distribusi laporan. Barcode dibuat otomatis dari No. RM + tanggal tindakan dan hanya tercetak pada laporan.',
+    'Pilih distribusi. Barcode hanya tercetak.',
     `<div class="g">
       <div class="fd wf"><label>Tembusan</label>
         <div class="chs">
@@ -749,11 +743,6 @@ function sec_ttd(){
 /* =========================================================
    RENDER
    ========================================================= */
-function renderJump(){
-  $('#jump').innerHTML=SECTIONS.map((s,i)=>{
-    return `<a data-jump="${s.id}">${i+1}. ${esc(s.title)}<span class="st" id="jst-${s.id}"></span></a>`;
-  }).join('');
-}
 function renderAll(){
   const c=$('#sections');
   c.innerHTML=SECTIONS.map(s=>s.render()).join('');
@@ -765,7 +754,6 @@ function renderAll(){
   refreshDiagramFields();
   refreshNarNote();
   refreshHeader();
-  calcJumpStatus();
   // restore narasi textarea
   const nt=$('#narasi');
   if(nt)nt.value=S.f.narasi||'';
@@ -790,24 +778,6 @@ function refreshDiagramFields(){
 }
 function refreshNarNote(){
   const n=$('#narNote');if(n)n.textContent=S.man?'(narasi diedit manual — Auto untuk reset)':'';
-}
-function calcJumpStatus(){
-  SECTIONS.forEach(s=>{
-    let missing=0,warn=0;
-    s.req.forEach(k=>{const v=S.f[k];if(!v||String(v).trim()==='')missing++});
-    if(s.id==='s1'&&S.f.lahir&&!S.f.umur)warn++;
-    if(s.id==='s3'&&!S.f.asisten)warn++;
-    if(s.id==='s6'&&!S.akses.length)warn++;
-    if(s.id==='s7'&&!S.vitals.length)warn++;
-    if(s.id==='s8'&&!S.f.kontrasVol)warn++;
-    if(s.id==='s13'&&!S.f.narasi)warn++;
-    const el=$('#jst-'+s.id);
-    if(!el)return;
-    el.className='st';
-    if(missing)el.classList.add('err');
-    else if(warn)el.classList.add('warn');
-    else el.classList.add('ok');
-  });
 }
 
 /* =========================================================
@@ -920,7 +890,7 @@ function attachDiagram(){
                `<text class="lb num" x="${x-8}" y="${y-6}">${code}</text>`+
                `<text class="lb" x="${x+2}" y="${y+6}">${name}</text>`;
       }).join('')+
-      '<text class="hd" x="150" y="30">SISTEM KIRI</text><text class="hd" x="400" y="30">SISTEM KANAN</text></svg>';
+      '<text class="hd" x="150" y="30">SISTEM KANAN</text><text class="hd" x="400" y="30">SISTEM KIRI</text></svg>';
     return `<div class="box">
       <h3>${esc(labelFor(ph))}</h3>
       <div class="tools">
@@ -1114,13 +1084,6 @@ document.addEventListener('click',e=>{
     openSegModal(seg.dataset.code,seg.dataset.name,seg.closest('svg').dataset.ph);
     return;
   }
-  // 2. Jump nav
-  const jump=e.target.closest('#jump a[data-jump]');
-  if(jump){
-    const el=document.getElementById(jump.dataset.jump);
-    if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
-    return;
-  }
   // 3. Button
   const b=e.target.closest('button');
   if(!b)return;
@@ -1160,6 +1123,7 @@ document.addEventListener('click',e=>{
     return;
   }
   if(a==='gen'){S.man=false;S.f.narasi=genNarasi();const el=$('#narasi');if(el)el.value=S.f.narasi;refreshNarNote();autoSync();return}
+  if(a==='guide'){startGuidedTour();return}
   if(a==='kes'){S.f.kesimpulan=autoKesimpulan();const inp=document.querySelector('[data-k="kesimpulan"]');if(inp)inp.value=S.f.kesimpulan;autoSync();return}
   if(a==='simrsTest'){
     const c=simrsCfg(), st=$('#simrsSt');
@@ -1338,7 +1302,7 @@ function segSVG(ph){
       const s=(S.seg[ph]||{})[segKey(c,n)]||{};
       return `<path class="seg ${s.s||''}" d="${d}"/><text class="lb num" x="${x-8}" y="${y-6}">${c}</text><text class="lb" x="${x+2}" y="${y+6}">${n}</text>`;
     }).join('')+
-    '<text class="hd" x="150" y="30">SISTEM KIRI</text><text class="hd" x="400" y="30">SISTEM KANAN</text></svg>';
+    '<text class="hd" x="150" y="30">SISTEM KANAN</text><text class="hd" x="400" y="30">SISTEM KIRI</text></svg>';
 }
 function legendHTML(){
   return `<div class="lg"><span><i style="background:#16a34a"></i>Normal</span><span><i style="background:#dc2626"></i>Stenosis</span><span><i style="background:#2563eb"></i>Stent</span><span><i style="background:#ea580c"></i>Trombus</span><span><i style="background:#7f1d1d"></i>Oklusi</span></div>`;
@@ -1644,13 +1608,93 @@ function demo(){
   toast('Data contoh dimuat.');
 }
 
+/* ---------- Panduan tur terintegrasi ---------- */
+const GUIDE_SEL={
+  akses:'#aksesTbl', diagram:'#dg', stent:'#stentTbl',
+  medsTbl:'#medsTbl', komplikasi:'[data-k="komplikasi"]',
+  komplikasiList:'[data-compl]', komplikasiCatatan:'[data-k="komplikasiCatatan"]',
+  tem:'[data-tem]', vitalTl:'#vitalTl'
+};
+function guideSelector(f){return GUIDE_SEL[f.k]||'[data-k="'+f.k+'"]'}
+function guideSpec(f){
+  const b=['tipe: <code>'+esc(f.type||'text')+'</code>'];
+  if(f.min!=null)b.push('min <code>'+f.min+'</code>');
+  if(f.max!=null)b.push('maks <code>'+f.max+'</code>');
+  if(f.pattern)b.push('pola <code>'+esc(f.pattern)+'</code>');
+  if(f.options)b.push('pilihan: '+esc(f.options.filter(Boolean).join(' / ')));
+  return b.join(' · ');
+}
+function guidePopover(s){
+  const f=s.field;
+  const badge=f.required?'<span class="tour-badge tour-req">Wajib</span>':(f.virtual?'<span class="tour-badge tour-auto">Tanpa kolom input</span>':'<span class="tour-badge tour-opt">Opsional</span>');
+  return badge+'<div class="tour-meta">'+guideSpec(f)+'</div>'+
+    (f.example?'<div class="tour-ex">Contoh: <code>'+esc(f.example)+'</code></div>':'')+
+    (f.tips?'<div class="tour-tip">'+esc(f.tips)+'</div>':'')+
+    (f.errors&&f.errors.length?'<details style="font-size:11.5px;margin:6px 0"><summary>Skenario validasi gagal</summary><ul>'+f.errors.map(e=>'<li>'+esc(e)+'</li>').join('')+'</ul></details>':'')+
+    '<div class="tour-valid idle" id="tourValid"></div>';
+}
+function guidePaint(el,s){
+  const box=document.getElementById('tourValid');if(!box)return;
+  const isComplex=['diagram','table','chips','choice'].includes(s.field.type)||!!(el.matches&&(el.matches('tr,table,.vrow,#chsAkses')||el.closest('table')||el.closest('#chsAkses')));
+  if(isComplex){box.className='tour-valid idle';box.textContent='Area kompleks — isi langsung pada bagian yang disorot.';return}
+  const val=el.type==='checkbox'?(el.checked?'1':''):String(el.value??'');
+  const res=window.CathlabSchema.validate(s.field,val);
+  if(String(val).trim()===''&&!s.field.required){box.className='tour-valid ok';box.textContent='✓ Kosong — boleh (opsional).'}
+  else if(res.ok){box.className='tour-valid ok';box.textContent='✓ Format valid.'}
+  else{box.className='tour-valid err';box.textContent='✕ '+res.msg}
+}
+function guideBind(el,s){
+  if(!el||el.__guideBound===s.field.k)return;
+  el.__guideBound=s.field.k;
+  ['input','change','blur'].forEach(evt=>el.addEventListener(evt,()=>guidePaint(el,s)));
+  setTimeout(()=>guidePaint(el,s),0);setTimeout(()=>guidePaint(el,s),80);setTimeout(()=>guidePaint(el,s),220);
+}
+var guideStepsCache=null, guideDriver=null;
+function buildGuideSteps(){
+  guideStepsCache=[];
+  window.CathlabSchema.SECTIONS.forEach(sec=>{
+    sec.fields.forEach(f=>{
+      const el=document.querySelector(guideSelector(f));
+      if(!el)return;
+      guideStepsCache.push({section:sec,field:f,sel:guideSelector(f),title:f.label.replace(/\s*\*$/, '')});
+    });
+  });
+}
+function startGuidedTour(){
+  if(!window.driver||!window.driver.js||!window.driver.js.driver){toast('Panduan belum siap.');return}
+  buildGuideSteps();
+  if(!guideStepsCache.length){toast('Tidak ada field yang bisa dipandu.');return}
+  if(!guideDriver){
+    guideDriver=window.driver.js.driver({
+      steps:guideStepsCache.map(s=>({
+        element:()=>document.querySelector(s.sel),
+        waitForElement:900,
+        popover:{title:s.title,description:guidePopover(s),side:'bottom',showProgress:true,progressText:'Field {{current}} dari {{total}}'},
+        data:{key:s.field.k}
+      })),
+      allowClose:true,allowScroll:true,smoothScroll:false,animate:true,duration:260,
+      overlayColor:'#0f1e2b',overlayOpacity:0.62,stagePadding:6,stageRadius:6,
+      showProgress:true,progressText:'Field {{current}} dari {{total}}',showButtons:['previous','next','close'],
+      nextBtnText:'Berikutnya →',prevBtnText:'← Sebelumnya',doneBtnText:'Selesai ✓',
+      disableActiveInteraction:false,
+      onHighlightStarted:(element,step,opts)=>{
+        const s=guideStepsCache.find(x=>x.field.k===(step&&step.data&&step.data.key))||guideStepsCache[opts&&opts.index]||guideStepsCache[0];
+        if(s&&element)guideBind(element,s);
+      },
+      onPopoverRender:(popover,opts)=>{
+        const s=guideStepsCache.find(x=>x.field.k===(opts&&opts.step&&opts.step.data&&opts.step.data.key))||guideStepsCache[opts&&opts.index]||guideStepsCache[0];
+        if(!s)return;try{const el=document.querySelector(s.sel);if(el)guideBind(el,s)}catch(e){}
+      }
+    });
+  }
+  guideDriver.drive?guideDriver.drive(0):guideDriver.setSteps(guideStepsCache.map(s=>({element:()=>document.querySelector(s.sel),popover:{title:s.title,description:guidePopover(s)}}))).drive(0);
+}
+
 /* =========================================================
    BOOT
    ========================================================= */
-renderJump();
 renderAll();
 refreshHeader();
-calcJumpStatus();
 refreshNarNote();
 
 // kalau ada S tersimpan tapi narasi kosong

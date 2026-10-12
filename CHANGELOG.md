@@ -5,6 +5,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), Versi [SemVer]
 ## [Unreleased]
 
 ### Revisi
+- **Diagram Koroner ditukar posisi (mirror)** — SISTEM KANAN (RCA/PDA/PLV)
+  kini di sebelah kiri dengan flip horizontal (cermin `x' = 520 - x`),
+  SISTEM KIRI (LM/LAD/LCX) pindah ke sebelah kanan. Label header ikut
+  pindah posisi (`SISTEM KANAN` di x=150, `SISTEM KIRI` di x=400), teks
+  label segmen tetap sama. Berlaku di form interaktif (`attachDiagram`)
+  maupun cetak (`segSVG`).
 - **Form versi ringkas/simple dihapus** — proyek kini memakai satu form utama
   (`form-input-lengkap.html`). Referensi, tautan navigasi, dan dokumentasi
   disinkronkan ulang.

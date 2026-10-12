@@ -21,7 +21,7 @@
 .toc a:hover { background: #f0fdfa; color: var(--ac); }
 .toc a.on { border-left-color: var(--ac); background: #f0fdfa; color: var(--ac); font-weight: 600; }
 
-.layout { display: grid; grid-template-columns: 260px 1fr; gap: 14px; align-items: start; }
+.layout { display: grid; grid-template-columns: 1fr; gap: 14px; align-items: start; }
 @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .toc { position: static; } }
 
 .doc { scroll-margin-top: 70px; }
@@ -62,7 +62,7 @@
 <main>
   <div class="page-head">
     <h1>Dokumentasi Form &amp; Bantuan Kontekstual</h1>
-    <p>Referensi lengkap setiap field pada <code>form-input-lengkap.html</code> — deskripsi, tipe data, format yang diterima, validasi, contoh input, dan skenario error.</p>
+    <p>Referensi field: tipe, format, validasi, contoh, dan error.</p>
   </div>
 
   <div class="toolbar">
@@ -72,7 +72,6 @@
   </div>
 
   <div class="layout">
-    <aside class="card toc" id="toc"></aside>
     <section id="docs"></section>
   </div>
 </main>
@@ -217,7 +216,6 @@
   function render() {
     var q = query.trim().toLowerCase();
     var html = '';
-    var toc = '';
     var count = 0;
 
     CathlabSchema.SECTIONS.forEach(function (sec) {
@@ -229,7 +227,6 @@
       if (!fields.length) return;
       count += fields.length;
 
-      toc += '<a href="#' + sec.id + '">' + sec.n + '. ' + esc(sec.title) + '</a>';
       html += '<div class="card doc" id="' + sec.id + '">' +
         '<h2><span class="n">' + sec.n + '</span>' + esc(sec.title) + '</h2>' +
         '<p class="hint">' + esc(sec.desc) + '</p>' +
@@ -238,8 +235,7 @@
         '</div>';
     });
 
-    $('#docs').innerHTML = html || '<div class="card empty">Tidak ada field yang cocok dengan pencarian/filter ini.<br><span class="small">Coba kata kunci lain atau pilih filter "Semua".</span></div>';
-    $('#toc').innerHTML = toc || '<p class="muted small">Tidak ada hasil.</p>';
+    $('#docs').innerHTML = html || '<div class="card empty">Tidak ada field yang cocok dengan pencarian ini.<br><span class="small">Coba kata kunci lain.</span></div>';
     $('#q').setAttribute('aria-label', 'Cari field');
     Docs.toast(count + ' field ditampilkan.', '');
   }
@@ -247,16 +243,6 @@
   $('#q').addEventListener('input', Docs.guard(function (e) { query = e.target.value; render(); }, 'pencarian'));
   $('#expandAll').onclick = Docs.guard(function () { Docs.$$('details.fieldset').forEach(function (d) { d.open = true; }); }, 'buka semua');
   $('#collapseAll').onclick = Docs.guard(function () { Docs.$$('details.fieldset').forEach(function (d) { d.open = false; }); }, 'tutup semua');
-
-  /* Highlight TOC saat scroll */
-  window.addEventListener('scroll', Docs.guard(function () {
-    var links = Docs.$$('#toc a'), best = null;
-    links.forEach(function (a) {
-      var el = document.getElementById(a.getAttribute('href').slice(1));
-      if (el && el.getBoundingClientRect().top <= 90) best = a;
-    });
-    links.forEach(function (a) { a.classList.toggle('on', a === best); });
-  }, 'scroll spy'), { passive: true });
 
   render();
 })();
