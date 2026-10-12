@@ -1,7 +1,7 @@
 # Laporan Cathlab
 
 Form laporan tindakan cathlab (RSUD H. Abdul Manap, Kota Jambi) plus halaman
-dokumentasi, panduan interaktif, dan panduan integrasi SIMRS.
+dokumentasi field.
 
 **Live:** https://adptra01.github.io/laporan-cathlab/
 
@@ -11,10 +11,7 @@ dokumentasi, panduan interaktif, dan panduan integrasi SIMRS.
 |---|---|---|
 | Halaman Depan | `index.html` | Pintu masuk, memilih versi form atau dokumentasi |
 | Form Laporan | `form-input-lengkap.html` | Form utama laporan cathlab. |
-| Interactive Form Guide | `form-guide.html` | Tur field + validasi real-time. |
 | Dokumentasi Form | `form-docs.html` | Referensi field. |
-| Step-by-Step Walkthrough | `form-walkthrough.html` | Pengisian bertahap 7 step. |
-| Integrasi SIMRS | `simrs-guide.html` | Master data pasien & dokter: endpoint, pemetaan field, konfigurasi, pengujian |
 
 ## Alat & Devices (Stent & Devices)
 
@@ -56,8 +53,8 @@ persegi** yang dibuat sepenuhnya otomatis dari `No. RM + tanggal tindakan`
   setiap kali laporan dicetak, jadi selalu konsisten dengan data pasien.
 - **Persegi.** Dipakai QR code (bukan barcode garis memanjang) supaya tetap
   mudah discan dan tidak memakan lebar halaman A4.
-- Tercetak sebagai **SVG inline** 28×28 mm pada semua template (Lengkap,
-  Ringkas, Epikrisis) sehingga tetap tajam pada resolusi printer apa pun.
+- Tercetak sebagai **SVG inline** 28×28 mm pada semua template (Lengkap dan
+  Epikrisis) sehingga tetap tajam pada resolusi printer apa pun.
 - Nilai barcode juga dicetak di bawah QR agar dapat dibaca manusia bila
   pemindaian otomatis tidak tersedia.
 
@@ -82,7 +79,7 @@ localStorage.setItem('cathlab:simrs', JSON.stringify({
 ```
 
 Bila `BASE_URL` kosong, form memakai data lokal (`PASIEN_DB`/`DOKTER_DB`) —
-perilaku bawaan di GitHub Pages. Detail lengkap ada di `simrs-guide.html`.
+perilaku bawaan di GitHub Pages.
 
 ## Berkas pendukung
 
@@ -103,10 +100,6 @@ python3 -m http.server 8000
 # buka http://localhost:8000/
 ```
 
-> Tur pada `form-guide.html` butuh akses ke isi iframe. Browser memblokir ini
-> saat halaman dibuka langsung lewat `file://`, jadi gunakan server lokal
-> (atau GitHub Pages).
-
 ## GitHub Pages
 
 Repo ini statis dan siap di-host di GitHub Pages (branch `main`, folder `/`).
@@ -116,5 +109,5 @@ Semua aset memakai path relatif, sehingga tetap bekerja di subpath seperti
 ## Menyunting dokumentasi
 
 Semua field didokumentasikan dari `js/form-schema.js`. Menambah/mengubah
-field cukup dilakukan di satu file tersebut; ketiga halaman dokumentasi
+field cukup dilakukan di satu file tersebut; halaman dokumentasi
 ikut menyesuaikan. Pastikan nama kunci (`data-k` pada form) sama persis.

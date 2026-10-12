@@ -1,6 +1,6 @@
 /* =========================================================
    CATHLAB FORM SCHEMA  —  single source of truth
-   Dipakai oleh: form-guide.html, form-docs.html, form-walkthrough.html
+   Dipakai oleh: form-docs.html
    Selaras dengan: form-input-lengkap.html
    ========================================================= */
 (function (global) {
@@ -69,7 +69,7 @@
        jk, alamat, no_telepon, penjamin, dpjp_masuk, ruang, kelas }
    GET {BASE_URL}/MASTER/dokter        → [ { nama_lengkap }, … ]
    Pemetaan field & konfigurasi ada di form-input-lengkap.html (SIMRS_CONFIG,
-   FIELD_MAP. Lihat simrs-guide.html untuk penjelasan. */
+   FIELD_MAP). */
 var SIMRS_DOCS = {
   baseUrl: '',
   pasienPath: '/MASTER/pasien/{no_rm}',
@@ -260,7 +260,7 @@ var SIMRS_DOCS = {
       fields: [
         D('ttdTgl', 'Tanggal TTD', { example: '2026-09-04', tips: 'Default = hari ini.', errors: [] }),
         T('ttdNama', 'Nama DPJP Jantung', { required: true, max: 60, example: 'dr. Puspita Sari Bustanul, Sp.JP', tips: 'Wajib terisi di form Lengkap.', errors: ['Kosong → "Wajib diisi"'] }),
-        { k: 'barcode', label: 'Barcode Laporan (QR)', type: 'auto', virtual: true, example: 'CATHLAB-00051563-20260903', tips: 'Tanpa form input. Nilai disusun otomatis dari No. RM + tanggal tindakan dengan pola CATHLAB-<No. RM>-<YYYYMMDD>, lalu dirender sebagai QR code persegi (28×28 mm) pada footer laporan cetak (Laporan Lengkap, Ringkas, dan Epikrisis) dalam bentuk SVG inline sehingga tetap tajam.', errors: [] },
+        { k: 'barcode', label: 'Barcode Laporan (QR)', type: 'auto', virtual: true, example: 'CATHLAB-00051563-20260903', tips: 'Tanpa form input. Nilai disusun otomatis dari No. RM + tanggal tindakan dengan pola CATHLAB-<No. RM>-<YYYYMMDD>, lalu dirender sebagai QR code persegi (28×28 mm) pada footer laporan cetak (Laporan Lengkap dan Epikrisis) dalam bentuk SVG inline sehingga tetap tajam.', errors: [] },
         { k: 'tem', label: 'Tembusan', type: 'chips', options: ['Rekam Medis', 'BPJS', 'Cathlab', 'Operator', 'Pasien'], default: 'Rekam Medis, BPJS, Cathlab, Operator', tips: 'Centang tujuan distribusi; tercetak di footer laporan.', errors: [] }
       ]
     }

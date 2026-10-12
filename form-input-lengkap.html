@@ -23,7 +23,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--ac);outline-offs
 textarea{min-height:100px;resize:vertical;font-family:inherit}
 label{display:block;font-size:11.5px;color:var(--mu);margin-bottom:3px;font-weight:500}
 
-#topbar{position:static;top:0;z-index:30;background:rgba(255,255,255,.97);backdrop-filter:blur(6px);border-bottom:1px solid var(--ln);padding:8px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+#topbar{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.97);backdrop-filter:blur(6px);border-bottom:1px solid var(--ln);padding:8px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 #topbar .t{font-weight:600;font-size:14px}
 #topbar .meta{color:var(--mu);font-size:12px}
 #topbar .actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
@@ -138,7 +138,6 @@ body.pv .pvbar{display:flex}
 .ft{display:flex;justify-content:space-between;margin-top:18px}
 .ft ol{margin:3px 0;padding-left:16px}
 .ttd{text-align:center;min-width:220px}
-.ttd .sp{height:60px}
 /* QR pada laporan cetak */
 .bc-qr{text-align:center}
 .bc-qr svg{display:block;margin:0 auto}
@@ -171,7 +170,6 @@ body.pv .pvbar{display:flex}
     <button data-a="reset">Reset</button>
     <button data-a="hist">Riwayat</button>
     <button data-a="guide" class="b2" type="button">Panduan</button>
-    <a href="simrs-guide.html" style="font:inherit;font-size:13px;padding:7px 13px;border:1px solid var(--ln);border-radius:6px;text-decoration:none;color:var(--ink);align-self:center">Panduan SIMRS</a>
     <button data-a="prev">Pratinjau</button>
     <button class="b1" data-a="print">Cetak</button>
   </div>
@@ -180,8 +178,8 @@ body.pv .pvbar{display:flex}
 <main id="sections"></main>
 
 <div id="fab">
-  <button class="b1" data-a="print" title="Cetak">🖨</button>
-  <button data-a="top" title="Ke atas">↑</button>
+  <button class="b1" data-a="print" title="Cetak" aria-label="Cetak"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7" rx="1"/></svg></button>
+  <button data-a="top" title="Ke atas" aria-label="Ke atas">↑</button>
 </div>
 
 <div class="md" id="md"><div class="mc" id="mc"></div></div>
@@ -193,7 +191,6 @@ body.pv .pvbar{display:flex}
   <label style="margin:0;display:flex;align-items:center;gap:6px;font-size:12px">Template:
     <select id="tpl">
       <option value="full">Laporan Lengkap</option>
-      <option value="summary">Ringkas 1 Halaman</option>
       <option value="epicrisis">Epikrisis</option>
     </select>
   </label>
@@ -1274,7 +1271,6 @@ function openPreview(){
 $('#tpl').addEventListener('change',()=>{if(document.body.classList.contains('pv'))openPreview()});
 
 function printHTML(tpl){
-  if(tpl==='summary')return printSummary();
   if(tpl==='epicrisis')return printEpicrisis();
   return printFull();
 }
@@ -1351,9 +1347,8 @@ function footerHTML(){
     <div class="ttd">
       Kota Jambi, ${tgID(f.ttdTgl)}<br>
       <b>DPJP Jantung</b>
-      <div class="sp"></div>
-      ( ${esc(f.ttdNama||'-')} )
       ${bcPrintHTML(28,4)}
+      ( ${esc(f.ttdNama||'-')} )
     </div>
   </div>`;
 }
@@ -1403,43 +1398,12 @@ function printFull(){
     ${footerHTML()}
   </section>`;
 }
-/* --- SUMMARY --- */
 /* Daftar perawat sirkuler yang terisi (1 dan/atau 2) */
 function sirkulerHTML(f){
   const list=[['1',f.perawat],['2',f.perawat2]]
     .filter(x=>String(x[1]||'').trim())
     .map(x=>'Sirkuler '+x[0]+': '+esc(x[1]));
   return list.length?list.join(' · '):'-';
-}
-function printSummary(){
-  const f=S.f,dual=isDual(),phases=dual?['A','B']:['A'];
-  const kompl=S.f.komplikasiList.length?S.f.komplikasiList.map(x=>x.replace('::',' — ')).join(', '):'-';
-  return `
-  <section class="pg">
-    ${kopHTML()}
-    <div class="tr">
-      <div style="padding-top:8px"><b style="font-size:16px">RINGKASAN TINDAKAN CATHLAB</b><br><span style="font-size:11px">${esc(f.jenis)}</span></div>
-      ${ptHTML()}
-    </div>
-    <table class="dt">
-      <tr><td>Tanggal</td><td>: ${tgID(f.tgl)}</td><td>Jam</td><td>: ${esc(f.mulai||'-')} — ${esc(f.selesai||'-')}</td></tr>
-      <tr><td>Diagnosis</td><td colspan="3">: ${esc(f.diagnosaPre||'-')}</td></tr>
-      <tr><td>Operator</td><td colspan="3">: ${esc(f.operator||'-')}${f.asisten?' (asisten: '+esc(f.asisten)+')':''}</td></tr>
-      <tr><td>Perawat</td><td colspan="3">: ${sirkulerHTML(f)}</td></tr>
-      <tr><td>Kontras / Radiasi</td><td colspan="3">: ${esc(f.kontras||'-')} ${esc(f.kontrasVol||'-')} cc / ${esc(f.radiasi||'-')} mGy</td></tr>
-      <tr><td>Komplikasi</td><td colspan="3">: ${esc(f.komplikasi)}${S.f.komplikasiList.length?(' — '+esc(kompl)):''}</td></tr>
-      <tr><td>Kesimpulan</td><td colspan="3">: <b>${esc(f.kesimpulan||'-')}</b></td></tr>
-    </table>
-    <h4>Diagram</h4>
-    <div class="dp${dual?'':' single'}">${phases.map(ph=>`<div><b>${esc(labelFor(ph))}</b>${segSVG(ph)}</div>`).join('')}</div>
-    ${legendHTML()}
-    <h4>Keterangan Segmen</h4>
-    <table class="lt"><tr><th>Fase</th><th>Segmen</th><th>Status</th><th>Stenosis</th><th>Catatan</th></tr>${segLegend(phases)}</table>
-    ${stentTblHTML()}
-    <h4>Narasi</h4>
-    <div class="nr" style="max-height:200px;overflow:hidden">${esc(f.narasi||'')}</div>
-    ${footerHTML()}
-  </section>`;
 }
 /* --- EPICRISIS --- */
 function printEpicrisis(){
@@ -1477,9 +1441,8 @@ function printEpicrisis(){
       <div class="ttd" style="font-family:inherit">
         Kota Jambi, ${tgID(f.ttdTgl)}<br>
         Dokter Pemeriksa / DPJP<br>
-        <div class="sp"></div>
-        <b>${esc(f.ttdNama||'-')}</b>
         ${bcPrintHTML(28,4)}
+        <b>${esc(f.ttdNama||'-')}</b>
       </div>
     </div>
   </section>`;

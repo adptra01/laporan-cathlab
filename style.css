@@ -2,7 +2,6 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Segoe UI", system-ui, sans-serif;
 }
 
 :root {
@@ -10,66 +9,319 @@
   --ink: #0f1e2b;
   --mu: #5b6b7a;
   --card: #fff;
+  --card2: #f8fafb;
   --ln: #d6dde3;
   --ac: #0f766e;
+  --ac-soft: #f0fdfa;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  min-height: 100vh;
-  background: var(--bg, #eef2f4);
-  color: var(--ink, #0f1e2b);
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Satoshi", "Cabinet Grotesk", "Geist", "Segoe UI", system-ui, -apple-system, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
   display: flex;
-  align-items: center;
   justify-content: center;
+  padding: 0 16px;
 }
 
 .container {
-  text-align: center;
-  padding: 2rem;
-  max-width: 900px;
   width: 100%;
+  max-width: 1080px;
+  padding: 56px 8px 40px;
+}
+
+/* Asymmetric intro: content left, summary offset right */
+.layout {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;
+  gap: 40px;
+  align-items: start;
+  margin-bottom: 36px;
+}
+
+.eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ac);
+  margin-bottom: 10px;
 }
 
 .hero h1 {
   font-size: 2.5rem;
-  margin-bottom: 0.5rem;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin-bottom: 12px;
+  text-wrap: balance;
+}
+
+.lede {
+  color: var(--mu);
+  max-width: 56ch;
+  margin-bottom: 20px;
+}
+
+.flow {
+  list-style: none;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.flow li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--card);
+  border: 1px solid var(--ln);
+  border-radius: 999px;
+  padding: 6px 14px 6px 6px;
+}
+
+.step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--ac);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.side {
+  background: var(--card);
+  border: 1px solid var(--ln);
+  border-radius: 16px;
+  padding: 20px 22px;
+  margin-top: 34px;
+  box-shadow: 0 20px 40px -24px rgba(15, 30, 43, 0.25);
+}
+
+.side h2 {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ac);
+  margin-bottom: 10px;
+}
+
+.side ul {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.side li {
+  position: relative;
+  padding-left: 20px;
+  font-size: 13.5px;
   color: var(--ink);
 }
 
-.hero p {
-  color: var(--mu);
-  margin-bottom: 2.5rem;
+.side li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 9px;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--ac);
+  opacity: 0.75;
 }
 
-.cards {
+/* Destinations: primary takes more room than reference */
+.dest {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 16px;
 }
 
 .card {
-  display: block;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
   background: var(--card);
   border: 1px solid var(--ln);
-  border-radius: 12px;
-  padding: 1.25rem 1rem;
+  border-radius: 18px;
+  padding: 22px;
   text-decoration: none;
   color: var(--ink);
-  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease), border-color 0.3s var(--ease);
 }
 
 .card:hover {
-  transform: translateY(-4px);
-  background: #f8fafb;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+  transform: translateY(-3px);
+  border-color: var(--ac);
+  box-shadow: 0 20px 40px -24px rgba(15, 118, 110, 0.45);
 }
 
-.hero h2, .card h2 {
-  margin-bottom: 0.75rem;
+.card:active {
+  transform: scale(0.98);
+}
+
+.card.primary {
+  background: linear-gradient(180deg, #fff 0%, var(--ac-soft) 140%);
+  border-color: var(--ac);
+}
+
+.icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--ac);
+  color: #fff;
+}
+
+.card:not(.primary) .icon {
+  background: var(--ac-soft);
+  color: var(--ac);
+  border: 1px solid var(--ln);
+}
+
+.body {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.kicker {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--ac);
 }
 
-.card p {
+.title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.desc {
+  font-size: 13.5px;
   color: var(--mu);
-  font-size: 0.95rem;
+}
+
+.meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.meta span {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ac);
+  background: #fff;
+  border: 1px solid var(--ln);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+.arrow {
+  margin-left: auto;
+  align-self: center;
+  color: var(--ac);
+  transition: transform 0.3s var(--ease);
+}
+
+.card:hover .arrow {
+  transform: translateX(4px);
+}
+
+.foot {
+  margin-top: 28px;
+  border-top: 1px solid var(--ln);
+  padding-top: 16px;
+  max-width: 70ch;
+}
+
+.foot p {
+  font-size: 13px;
+  color: var(--mu);
+}
+
+.foot strong {
+  color: var(--ink);
+}
+
+/* Entrance cascade: transform + opacity only */
+.layout,
+.dest .card,
+.foot {
+  animation: rise 0.6s var(--ease) both;
+}
+
+.dest .card:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.foot {
+  animation-delay: 0.18s;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layout,
+  .dest .card,
+  .foot {
+    animation: none;
+  }
+
+  .card,
+  .arrow {
+    transition: none;
+  }
+}
+
+/* Aggressive single-column collapse below 768px */
+@media (max-width: 768px) {
+  .container {
+    padding: 32px 4px;
+  }
+
+  .layout,
+  .dest {
+    grid-template-columns: 1fr;
+  }
+
+  .side {
+    margin-top: 0;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+  }
 }

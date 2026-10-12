@@ -5,6 +5,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), Versi [SemVer]
 ## [Unreleased]
 
 ### Revisi
+- **Halaman depan disederhanakan** — `index.html` kini hanya berisi dua
+  tujuan (Isi Laporan Tindakan + Dokumentasi Field) dengan hero rata kiri,
+  alur 3 langkah, dan panel ringkasan isi form. Kartu Interactive Guide,
+  Walkthrough, dan Integrasi SIMRS dihapus agar tidak membingungkan.
+- **Form input dirapikan** — topbar dibuat sticky agar tombol aksi selalu
+  terlihat saat menggulir form panjang; tautan Panduan SIMRS yang halamannya
+  dihapus dicabut dari topbar (tur interaktif "Panduan" di dalam form tetap
+  ada); tombol cetak melayang memakai ikon SVG, bukan emoji.
+- **Blok tanda tangan dibetulkan** — QR barcode kini berada di antara jabatan
+  dan nama dokter (tempat/tanggal → barcode → nama), bukan di bawah nama.
+  Berlaku di kedua template cetak (Lengkap dan Epikrisis).
 - **Diagram Koroner ditukar posisi (mirror)** — SISTEM KANAN (RCA/PDA/PLV)
   kini di sebelah kiri dengan flip horizontal (cermin `x' = 520 - x`),
   SISTEM KIRI (LM/LAD/LCX) pindah ke sebelah kanan. Label header ikut
@@ -42,14 +53,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), Versi [SemVer]
   “Generate barcode”, maupun pilihan tipe (CODE128/CODE39/EAN13). Section 14
   kembali menjadi “Tembusan & Barcode” dan hanya memuat Tembusan + data TTD.
 - Barcode hanya dirender pada hasil cetak/pratinjau (28×28 mm, SVG inline) di
-  ketiga template: Laporan Lengkap, Ringkas, dan Epikrisis.
+  kedua template: Laporan Lengkap dan Epikrisis.
 - Ketergantungan JsBarcode diganti `qrcode-generator` 1.4.4 (MIT).
 - **Perbaikan:** `Perawat Sirkuler 2` dan `Monitoring` sebelumnya tidak
   tercetak pada laporan. Ketiganya kini muncul di Laporan Lengkap, dan
-  ringkas/epikrisis memakai helper `sirkulerHTML()` yang hanya menampilkan
+  epikrisis memakai helper `sirkulerHTML()` yang hanya menampilkan
   perawat sirkuler yang terisi.
 
 ### Dihapus
+- **Template cetak Ringkas 1 Halaman** — opsi template pada pratinjau cetak
+  kini hanya Laporan Lengkap dan Epikrisis; fungsi `printSummary()` dihapus.
+- **Halaman panduan terpisah** — `form-guide.html`, `form-walkthrough.html`,
+  dan `simrs-guide.html` dihapus beserta tautannya dari halaman depan,
+  navigasi dokumentasi, dan topbar form. Tur interaktif di dalam form
+  ("Panduan") dan auto-load SIMRS via No. RM tetap berfungsi.
 - **Fungsi Ekspor & Impor JSON** dari form utama: tombol `Ekspor` dan
   `Impor`, input file `#impf`, handler `FileReader`, fungsi `exportJSON()`,
   dan pintasan `Ctrl+E`. Tombol `Salin JSON` dan `Unduh .json` juga dihapus
@@ -61,11 +78,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/id/1.1.0/), Versi [SemVer]
 - `form-input-lengkap.html` — form laporan cathlab utama (14 section,
   timeline hemodinamik, registry alat, komplikasi terstruktur, 3 template
   cetak, riwayat versi, integrasi SIMRS).
-- `form-guide.html` — tur interaktif memakai **Driver.js** di atas form asli.
 - `form-docs.html` — dokumentasi field lengkap dengan skenario error.
-- `form-walkthrough.html` — pengisian bertahap 7 step dengan validasi per step.
-- `simrs-guide.html` — panduan integrasi SIMRS (endpoint, pemetaan field,
-  konfigurasi, pengujian koneksi, catatan keamanan).
 - **Barcode laporan** (QR otomatis) menggantikan gambar tanda tangan,
   dibuat dari No. RM + tanggal dan tercetak sebagai SVG inline.
 - Integrasi master data **SIMRS**: `fetchPasien()` / `fetchDokter()`, konfigurasi

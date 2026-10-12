@@ -3,42 +3,70 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Laporan Cathlab</title>
+  <meta name="description" content="Pintu masuk laporan tindakan cathlab RSUD H. Abdul Manap: isi form laporan atau baca dokumentasi field." />
+  <title>Laporan Cathlab — RSUD H. Abdul Manap</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="container">
-    <header class="hero">
-      <h1>Laporan Cathlab</h1>
-      <p>Form laporan cathlab, panduan, dan dokumentasi.</p>
-    </header>
+    <div class="layout">
+      <header class="hero">
+        <p class="eyebrow">RSUD H. Abdul Manap &middot; Ruang Cathlab</p>
+        <h1>Laporan Tindakan Cathlab</h1>
+        <p class="lede">Isi laporan tindakan dari awal sampai siap cetak. Data tersimpan otomatis di browser ini, jadi form boleh ditutup dan dilanjutkan kapan saja.</p>
+        <ol class="flow">
+          <li><span class="step">1</span>Isi form laporan</li>
+          <li><span class="step">2</span>Pratinjau hasil</li>
+          <li><span class="step">3</span>Cetak / arsipkan</li>
+        </ol>
+      </header>
 
-    <section class="cards">
-      <a class="card" href="form-input-lengkap.html">
-        <h2>Form Input</h2>
-        <p>Isi laporan cathlab lengkap.</p>
-      </a>
+      <aside class="side" aria-label="Ringkasan isi form">
+        <h2>Isi form mencakup</h2>
+        <ul>
+          <li>Identitas pasien &amp; admisi tindakan</li>
+          <li>Tim operator, akses vaskular, hemodinamik</li>
+          <li>Obat, kontras, diagram koroner AHA 16-segmen</li>
+          <li>Alat &amp; devices, komplikasi, narasi otomatis</li>
+          <li>Tembusan, barcode QR, 2 template cetak</li>
+        </ul>
+      </aside>
+    </div>
 
-      <a class="card" href="form-guide.html">
-        <h2>Interactive Form Guide</h2>
-        <p>Tur field dengan validasi langsung.</p>
+    <section class="dest" aria-label="Pilih tujuan">
+      <a class="card primary" href="form-input-lengkap.html">
+        <span class="icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4a3 3 0 0 1 6 0"/><path d="M9 11h6M9 15h4"/></svg>
+        </span>
+        <span class="body">
+          <span class="kicker">Mulai di sini</span>
+          <span class="title">Isi Laporan Tindakan</span>
+          <span class="desc">Form utama 14 section: dari identitas pasien sampai narasi, kesimpulan, dan cetak.</span>
+          <span class="meta"><span>14 section</span><span>Diagram AHA</span><span>Auto-save</span></span>
+        </span>
+        <span class="arrow" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+        </span>
       </a>
 
       <a class="card" href="form-docs.html">
-        <h2>Dokumentasi Form</h2>
-        <p>Referensi field, format, dan validasi.</p>
-      </a>
-
-      <a class="card" href="form-walkthrough.html">
-        <h2>Step-by-Step Walkthrough</h2>
-        <p>Isi per step. Progres tersimpan.</p>
-      </a>
-
-      <a class="card" href="simrs-guide.html">
-        <h2>Integrasi SIMRS</h2>
-        <p>Ambil data pasien &amp; dokter dari SIMRS.</p>
+        <span class="icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5v13Z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/><path d="M9 8h7M9 12h5"/></svg>
+        </span>
+        <span class="body">
+          <span class="kicker">Referensi</span>
+          <span class="title">Dokumentasi Field</span>
+          <span class="desc">Arti tiap kolom, format yang benar, dan contoh isi yang valid.</span>
+        </span>
+        <span class="arrow" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+        </span>
       </a>
     </section>
+
+    <footer class="foot">
+      <p>Butuh data pasien otomatis? Isi <strong>No. RM</strong> di form lalu tekan <strong>Enter</strong> — data ditarik dari SIMRS bila tersedia, atau isi manual bila offline.</p>
+    </footer>
   </main>
 
   <script src="script.js"></script>
